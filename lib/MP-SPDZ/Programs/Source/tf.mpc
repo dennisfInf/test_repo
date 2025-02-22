@@ -1,6 +1,6 @@
 import ml
 import util
-import mathfile:///home/dennis/Desktop/bookkeeping/Code/lib/MP-SPDZ/Programs/Source/testtt.mpc
+import mathfile
 
 import subprocess
 
