@@ -20,7 +20,9 @@ logbook_size is equal to the amount of entries inside a logbook per user
 bits is equal to 2^{bits} logbook addresses.
 
 Now to build the docker files use:
+
 chmod 777 ./scripts/
+
 ./scripts/build_docker.zsh
 
 which will build the docker files for you.
