@@ -1,0 +1,169 @@
+# Import the necessary module for elliptic curve operations
+from path_oram import OptimalORAM
+from Compiler.program import *
+from Compiler.library import print_ln, do_while, for_range, crash
+from Compiler.types import sint, regint, Array, MemValue, localint
+from Compiler.util import if_else
+program.use_edabit(True)
+PORTNUM = 14256
+n_rounds = 0
+n_threads = 2
+# CHANGE THIS VALUE TO FIT N PARAMETER
+MAX_NUM_CLIENTS = 3
+bits = 15
+dim_2 = 6
+LOG_BOOK_SIZE = 1
+counter = 0;
+if len(program.args) > 1:
+    MAX_NUM_CLIENTS = int(program.args[1])
+if len(program.args) > 2:
+    LOG_BOOK_SIZE = int(program.args[2])
+if len(program.args) > 3:
+    bits = int(program.args[3])
+if len(program.args) > 4:
+    n_rounds = int(program.args[4])
+if len(program.args) > 5:
+    program.active = bool(int(program.args[5]))
+
+SIZE_DIM_2 = dim_2 // 3
+dim_1 = 2**bits     
+oram = OptimalORAM(size=dim_1, entry_size=[32*3]*(SIZE_DIM_2)*LOG_BOOK_SIZE, init_rounds=0, value_type=sint)
+print_ln("o_ram finished")
+
+
+def accept_client():
+    client_socket_id = accept_client_connection(PORTNUM)
+    bootstrapper = regint.read_from_socket(client_socket_id)
+    return client_socket_id,bootstrapper
+    
+def close_connections(number_clients):
+    @for_range(number_clients)
+    def _(i):
+        closeclientconnection(i)
+
+def client_input(t, client_socket_id,size):
+    """
+    Send share of random value, receive input and deduce share.
+    """
+    return t.receive_from_client(size, client_socket_id)
+
+def output_mpc_finished_to_clients(sockets, number_clients):
+    print_ln("number_clients: %s", number_clients.read())
+    sint.reveal_to_clients(sockets.get_sub(number_clients.read()),[sint(0)])
+
+
+def main():
+
+    """Listen while all clients connect to the mpc.
+    Once maxiumum reached or have notified that round finished, add the shares and return result."""
+    # Start listening for client socket connections
+    listen_for_clients(PORTNUM)
+    print_ln('Listening for client connections on base port %s', PORTNUM)
+
+    def game_loop(_=None):
+        print_ln('Starting a new round of the game.')
+
+        # Clients socket id (integer).
+        client_sockets = Array(MAX_NUM_CLIENTS, regint)
+        # Number of clients
+        number_clients = MemValue(regint(0))
+        # Client ids to identity client
+        client_ids = Array(MAX_NUM_CLIENTS, sint)
+        # Keep track of received inputs
+        seen = Array(MAX_NUM_CLIENTS, regint)
+        seen.assign_all(0)
+
+        bootstrapper_id = MemValue(regint(0));
+        # Loop round waiting for each client to connect
+        @do_while
+        def client_connections():
+            client_id,bootstrapper  = accept_client()
+            print_ln("received connection from %s", client_id)
+
+            @if_(client_id >= MAX_NUM_CLIENTS)
+            def _():
+                print_ln('client id too high')
+                crash()
+            @if_(bootstrapper > 0)
+            def _():
+                bootstrapper_id.write(client_id)
+            client_sockets[client_id] = client_id
+            client_ids[client_id] = client_id
+            seen[client_id] = 1
+            sum_seen = sum(seen)
+            @if_(sum_seen == MAX_NUM_CLIENTS)
+            def _():
+                print_ln("number_clients cleint_id: %s", client_id)
+                number_clients.write(sum_seen)
+            return (MAX_NUM_CLIENTS > sum_seen) + (sum_seen == 0)
+
+        def type_run(_=None):
+            # Clients secret input.
+            print_ln("waiting for inputs oram \n")
+            t = sint
+            client_values = Array(MAX_NUM_CLIENTS,sint)  
+            message =  Array(6, sint)   
+
+            @for_range_multithread(MAX_NUM_CLIENTS, 1, MAX_NUM_CLIENTS)
+            def _(client_id):
+
+                @if_e(bootstrapper_id.read() == client_id)
+                def _():
+
+                   bootstrap_share_input = client_input(t, client_id,3)
+                   client_values[client_id] = bootstrap_share_input[0]
+                   message = bootstrap_share_input[1:]
+                @else_
+                def _():
+                    index = MemValue(client_id)
+                    @if_(bootstrapper_id.read() < client_id)
+                    def _():
+                        index.write(client_id - 1)
+                    client_values[index.read()]= client_input(t, client_id,1)[0]
+            start_timer(20)
+
+            addr = sint(0)
+            @for_range(MAX_NUM_CLIENTS)
+            def _(i):
+                addr.update(addr + client_values[i])   
+            decomposed_bits = addr.bit_decompose(bits+3);
+            addr = sint.bit_compose(decomposed_bits[3:])
+            unwritten = MemValue(sintbit(1))
+            b = MemValue(sintbit(0))
+            x = range(1, LOG_BOOK_SIZE)   
+            start_timer(25)    
+            entries = list(oram[addr])
+            stop_timer(25)
+            def insert_message(first_entry):
+                b.write(unwritten & (entries[first_entry].equal(sint(0))))
+                unwritten.write(unwritten ^ (b))
+                c = sint(1-b)
+                d = sint(b)
+                entries[first_entry] = c * entries[first_entry] + d * message[0]
+                entries[first_entry+1] = c * entries[first_entry+1] + d * message[1]
+            insert_message(0)
+            for i in x:
+                insert_message(i*SIZE_DIM_2)
+            new_entry = tuple(entries)
+            start_timer(26)
+            oram[addr] = new_entry
+            stop_timer(26)
+            print_ln("waiting for inputs oram \n")
+
+            output_mpc_finished_to_clients(client_sockets, number_clients)
+            stop_timer(20)
+
+        for_range(50)(type_run)
+        print_ln("finished")
+        close_connections(number_clients)
+
+        return True
+
+    if n_rounds > 0:
+        print('run %d rounds' % n_rounds)
+        for_range(n_rounds)(game_loop)
+    else:
+        print('run forever')
+        do_while(game_loop)
+
+main()

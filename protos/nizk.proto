@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package nizk_network;
+
+message CRS {
+    bytes value = 1;
+}
+
+service RISS {
+    
+}
+

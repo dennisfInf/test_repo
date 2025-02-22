@@ -1,0 +1,93 @@
+# coding: latin-1
+"""
+  Solve Bankers bonus, aka Millionaires problem.
+  to deduce the maximum value from a range of integer input.
+
+  Demonstrate clients external to computing parties supplying input and receiving an authenticated result. See bankers-bonus-client.cpp for client (and setup instructions).
+  
+  Wait for MAX_NUM_CLIENTS to join the game or client finish flag to be sent
+  before calculating the maximum.
+
+  Note each client connects in a single thread and so is potentially blocked.
+  
+  Each round / game will reset and so this runs indefinitiely.
+"""
+
+from Compiler.types import sint, regint, Array, MemValue
+from Compiler.library import print_ln, do_while, for_range
+from Compiler.util import if_else
+
+PORTNUM = 14000
+MAX_NUM_CLIENTS = 8
+n_rounds = 0
+n_threads = 2
+
+if len(program.args) > 1:
+    n_rounds = int(program.args[1])
+
+if len(program.args) > 2:
+    program.active = bool(int(program.args[2]))
+
+def accept_client():
+    client_socket_id = accept_client_connection(PORTNUM)
+    last = regint.read_from_socket(client_socket_id)
+    return client_socket_id, last
+
+def close_connections(number_clients):
+    @for_range(number_clients)
+    def _(i):
+        closeclientconnection(i)
+
+def main():
+    """Listen in while loop for players to join a game.
+    Once maxiumum reached or have notified that round finished, run comparison and return result."""
+    # Start listening for client socket connections
+    listen_for_clients(PORTNUM)
+    print_ln('Listening for client connections on base port %s', PORTNUM)
+
+    def game_loop(_=None):
+        print_ln('Starting a new round of the game.')
+
+        # Clients socket id (integer).
+        client_sockets = Array(MAX_NUM_CLIENTS, regint)
+        # Number of clients
+        number_clients = MemValue(regint(0))
+        # Client ids to identity client
+        client_ids = Array(MAX_NUM_CLIENTS, sint)
+        # Keep track of received inputs
+        seen = Array(MAX_NUM_CLIENTS, regint)
+        seen.assign_all(0)
+
+        # Loop round waiting for each client to connect
+        @do_while
+        def client_connections():
+            client_id, last = accept_client()
+            @if_(client_id >= MAX_NUM_CLIENTS)
+            def _():
+                print_ln('client id too high')
+                crash()
+            client_sockets[client_id] = client_id
+            client_ids[client_id] = client_id
+            seen[client_id] = 1
+            @if_(last == 1)
+            def _():
+                number_clients.write(client_id + 1)
+
+            return (sum(seen) < number_clients) + (number_clients == 0)
+
+        # ÄNDERUNGEN HIER
+        x = sint.read_from_socket(get_player_id().get_regint(),1)
+        print_ln('x %s', x.reveal())
+        # ÄNDERUNGEN ENDE
+        close_connections(number_clients)
+
+        return True
+
+    if n_rounds > 0:
+        print('run %d rounds' % n_rounds)
+        for_range(n_rounds)(game_loop)
+    else:
+        print('run forever')
+        do_while(game_loop)
+
+main()

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package bootstrapper;
+
+message Hello {
+    uint32 port = 1;
+}
+
+message ParticipantIndex {
+    uint32 index = 1;
+}
+
+message Response{
+}
+
+message Participant{
+    uint32 index = 1;
+    string address = 2;
+}
+
+message Participants{
+    repeated Participant participants = 1;
+    bytes crs = 2;
+}
+
+service Bootstrap {
+    rpc RegisterUser(Hello) returns (ParticipantIndex) {}
+}
+
+service SendParticipants {
+    rpc SendParticipants(Participants) returns (Response) {}
+}

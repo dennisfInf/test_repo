@@ -1,0 +1,251 @@
+# Import the necessary module for elliptic curve operations
+from Compiler.ecc import *
+from Compiler.check_shares import *
+from Compiler.program import *
+from Compiler.library import print_ln, do_while, for_range, crash, get_number_of_players, get_player_id
+from Compiler.types import sint, regint, Array, MemValue, localint
+from Compiler.util import if_else
+program.set_bit_length(379)
+program.use_edabit(True)
+PORTNUM = 14000
+# MUST BE KNOWN AT COMPILE TIME
+MAX_NUM_CLIENTS = 3
+THRESHOLD = 2
+n_rounds = 0
+n_threads = 2
+batch_size = 25
+if len(program.args) > 1:
+    MAX_NUM_CLIENTS = int(program.args[1])
+if len(program.args) > 2:
+    THRESHOLD = int(program.args[2])
+if len(program.args) > 3:
+    n_rounds = int(program.args[3])
+if len(program.args) > 4:
+    batch_size = int(program.args[4])
+if len(program.args) >5:
+    program.active = bool(int(program.args[5]))
+
+def accept_client():
+    client_socket_id = accept_client_connection(PORTNUM)
+    bootstrapper = regint.read_from_socket(client_socket_id)
+    return client_socket_id,bootstrapper
+
+
+def close_connections(number_clients):
+    @for_range(number_clients)
+    def _(i):
+        closeclientconnection(i)
+
+def client_input(t, client_socket_id,size):
+    """
+    Send share of random value, receive input and deduce share.
+    """
+    # receives x,y coordinates of the decryption share times the batch size
+    return t.receive_from_client(size, client_socket_id)
+
+def output_values(client, values):
+    print_ln("outputting shares")
+    sint.reveal_to_clients(client,values)
+
+
+# Function to check if a number is odd
+def is_odd(n):
+    # Return true if the number is odd, false otherwise
+    return (n & 1) == 1
+
+
+# Function to sum up points
+# 
+def sum_points(input):
+    # Get the input points
+    # Initialize the size of the result
+    result_size = cint(THRESHOLD+1)
+
+    # Loop until the size of the result is more than 1
+    @do_while
+    def _():
+        # Initialize the size of the new result
+        new_result_size = cint(0)
+
+        # Loop over the input points in pairs
+        @for_range_opt(0,result_size-1, 2)
+        def _(i):
+            # Add the current pair of points and store the result in the input array
+            input[new_result_size] = add_points_bernstein(input[i][0],input[i][1],input[i][2], input[i+1][0], input[i+1][1],input[i+1][2])
+            # Increase the size of the new result
+            new_result_size.update(new_result_size + 1)
+
+        # If the size of the result is odd and more than 1
+        @if_(is_odd(result_size) & (new_result_size >= 1))
+        def _():
+            # Increase the size of the new result
+            input[new_result_size]= input[result_size-1]
+            new_result_size.update(new_result_size + 1)
+            # Copy the last point of the result to the input array
+
+        # Update the size of the result
+        result_size.update(new_result_size)
+
+        # Continue the loop if the size of the result is more than 1
+        return result_size > 1
+
+    # Return the first point of the result
+    return input[0]
+
+def main():
+
+    """Listen while all clients connect to the mpc.
+    Once maxiumum reached or have notified that round finished, add the shares and return result."""
+    # Start listening for client socket connections
+    listen_for_clients(PORTNUM)
+    print_ln('Listening for client connections on base port %s', PORTNUM)
+
+    def game_loop(_=None):
+        print_ln('Starting a new round of the game.')
+
+        # Clients socket id (integer).
+        client_sockets = Array(MAX_NUM_CLIENTS, regint)
+        # Number of clients
+        number_clients = MemValue(regint(0))
+        # Client ids to identity client
+        client_ids = Array(MAX_NUM_CLIENTS, sint)
+        # Keep track of received inputs
+        seen = Array(MAX_NUM_CLIENTS, regint)
+        seen.assign_all(0)
+
+        bootstrapper_id = MemValue(regint(0));
+        # Loop round waiting for each client to connect
+        @do_while
+        def client_connections():
+            client_id,bootstrapper  = accept_client()
+            print_ln('adding new client \n')
+            print_ln('client id: %s \n', client_id)
+            @if_(client_id >= MAX_NUM_CLIENTS)
+            def _():
+                print_ln('client id too high')
+                crash()
+            @if_(bootstrapper > 0)
+            def _():
+                bootstrapper_id.write(client_id)
+            client_sockets[client_id] = client_id
+            client_ids[client_id] = client_id
+            seen[client_id] = 1
+            sum_seen = sum(seen)
+            @if_(sum_seen == MAX_NUM_CLIENTS)
+            def _():
+                print_ln("number_clients cleint_id: %s \n", client_id)
+                number_clients.write(sum_seen)
+
+            return (MAX_NUM_CLIENTS > sum_seen) + (sum_seen == 0)
+
+
+
+
+        def type_run(_=None):
+            print_ln("waiting for inputs \n")
+            client_values_one = sint.Tensor([THRESHOLD+1,3,batch_size])  
+            client_values_two = sint.Tensor([THRESHOLD+1,3,batch_size])  
+            ciphertexts = sint.Tensor([2,batch_size])  
+
+            print_ln('reached type here.')
+            zero = MemValue(0)
+            one = MemValue(1)
+            two = MemValue(2)
+            @for_range_multithread(THRESHOLD+1, 1, MAX_NUM_CLIENTS)
+            def _(client_id):
+                @if_e(bootstrapper_id.read() == client_id)
+                def _():
+                   client_input_list = client_input(sint, client_id,batch_size*4)
+                   print_ln("reached after unsorted bootstrap \n")
+                   # extract the x coords (using zero and one is required by mp-spdz for thread safety) 
+                   client_values_one[client_id][zero.read()] = client_input_list[:batch_size]
+                   client_values_one[client_id][one.read()] = client_input_list[batch_size:batch_size*2]
+                   client_values_one[client_id][two.read()] = list([regint(1)]*batch_size)
+                   ciphertexts[zero.read()] = client_input_list[batch_size*2:batch_size*3]
+                   ciphertexts[one.read()] = client_input_list[batch_size*3:]
+               
+
+                   print_ln("\n bootstrap input received")
+                @else_
+                def _():
+                    client_input_list = client_input(sint, client_id,batch_size*2)
+                    print_ln("reached after client_input_list\n")
+                    @if_e(client_id < THRESHOLD+1)
+                    def _(): 
+      
+                        client_values_one[client_id][zero.read()] = client_input_list[:batch_size]
+                        client_values_one[client_id][one.read()] = client_input_list[batch_size:]
+                        client_values_one[client_id][two.read()] = list([regint(1)]*batch_size)
+                    @else_
+                    def _():
+                       # skipping Index 0 for client_values_two, which is a duplicate of the last index in client values one
+                        index = MemValue(client_id)
+                        index.write(client_id - THRESHOLD)
+
+                        client_values_two[index.read()][zero.read()] = client_input_list[:batch_size]
+                        client_values_two[index.read()][one.read()] = client_input_list[batch_size:]
+                        client_values_two[index.read()][two.read()] = list([regint(1)]*batch_size)
+
+           #the duplicate is assigned here
+            print_ln('c2: nested %s',ciphertexts.reveal_nested())
+
+            client_values_two[0] = client_values_one[THRESHOLD]
+            print_ln("\n inputs received")
+            start_timer(20)
+            z_vec = Array(batch_size,regint)
+            z_vec.assign(list([regint(1)]*batch_size))
+            print_ln("\n sum shares")
+
+            res1 = multi_exp_shamir_method(client_values_one,lagrange_first,batch_size)
+            res2 = multi_exp_shamir_method(client_values_two,lagrange_second,batch_size)
+
+            res1 = norm_point_with_y(res1[0],res1[1],res1[2]) 
+            res2 = norm_point_with_y(res2[0],res2[1],res2[2]) 
+    
+            res_x = res1[0] - res2[0]
+            res_y = res1[1] - res2[1]
+            res_xy = res_x + res_y
+            zero_coords = Array(batch_size,sint)
+            zero_coords.assign(res_xy)
+            r = MemValue(sint.get_random())
+
+            @map_sum_opt(3, batch_size, [sint])
+            def summer(i):
+                return zero_coords[i]*r.read()**i
+
+            sum = summer().reveal()
+            @if_e(sum != 0)
+            def _():
+                print_ln("sum not equal to 0 %s", sum)
+            @else_
+            def _():
+                print_ln("sum equal to zero")
+
+            sum_shares =  sum_points(client_values_one); 
+            results =  add_points_bernstein(ciphertexts[0],ciphertexts[1],z_vec, sum_shares[0], -sum_shares[1],sum_shares[2])
+
+            x_arr = norm_point(results[0],results[2])
+            points = reshare(MAX_NUM_CLIENTS,THRESHOLD,x_arr)
+            @for_range_multithread(THRESHOLD+1, 1, MAX_NUM_CLIENTS)
+            def _(client_id):
+                output_values(client_id,points[client_id])
+            stop_timer(20)
+        # Is MAX_NUM_CLIENTS here correct??
+        lagrange_first = compute_lagrange_coeffs(THRESHOLD+1,cint(0), 1, THRESHOLD+1)
+        lagrange_second = compute_lagrange_coeffs(THRESHOLD+1,cint(0), THRESHOLD+1, MAX_NUM_CLIENTS)
+
+        for_range(50)(type_run)
+        print_ln('reached type input.')
+
+        close_connections(number_clients)
+
+        return True
+
+    if n_rounds > 0:
+        print('run %d rounds' % n_rounds)
+        for_range(n_rounds)(game_loop)
+    else:
+        print('run forever')
+        do_while(game_loop)
+
+main()

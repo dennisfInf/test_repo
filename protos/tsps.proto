@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package tsps;
+
+message Response {
+}
+
+message Share {
+    uint32 receiver_index = 1;
+    bytes share = 2;
+}
+
+message Signature{
+    bytes z = 1;
+    bytes r = 2;
+}
+
+
+message Proposed_Commitment {
+    uint32 player_id = 1;
+    bytes commitments = 2;
+    Signature signature = 3;
+}
+
+
+message Commited_Share{
+    Share share =1;
+    Proposed_Commitment commitment = 2;
+    uint32 row = 3;
+    uint32 col = 4;
+}
+
+message Matrix{
+    uint32 matrix_variant = 1;
+    bytes matrix = 2;
+}
+
+message Message{
+    bytes message = 1;
+    uint32 id = 2;
+    bytes nizk_proof = 3;
+}
+
+message PartialSignatureProto{
+    bytes sig_1 = 1; //Vector of G1 elements or nx1 Matrix 
+    bytes sig_2 = 2; //Vector of G1 elements or nx1 Matrix
+    bytes sig_3 = 3; //Vector of G1 elements or nx1 Matrix
+    bytes sig_4 = 4; //G2 element
+    uint32 message_id = 5;
+    uint32 party_id = 6;
+}
+
+service DKG {
+    rpc Send_Commited_Shares(Commited_Share) returns (Response) {}
+    rpc Send_Matrix(Matrix) returns (Response) {}
+    rpc Send_Message(Message) returns (Response) {}
+    rpc Send_PartialSignature(PartialSignatureProto) returns (Response) {}
+    rpc Send_Verification_Key(Matrix) returns (Response) {}
+}
+
+service TSPS{
+    
+}
+
+

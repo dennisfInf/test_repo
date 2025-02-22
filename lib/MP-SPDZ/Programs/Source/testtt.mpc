@@ -1,0 +1,40 @@
+from path_oram import OptimalORAM
+from Compiler.library import print_ln, if_, do_while,crash
+from Compiler.types import MemValue
+
+dim_1 = 10**6
+dim_2 = 6
+LOG_BOOK_SIZE = 100
+SIZE_DIM_2 = dim_2 // 3
+oram = OptimalORAM(size=dim_1, entry_size=[32*3]*(SIZE_DIM_2)*LOG_BOOK_SIZE, init_rounds=0, value_type=sint) 
+start_timer(10)
+
+
+
+def test(_=None):    
+    entries = list(oram[50])
+    start_timer(11)
+    unwritten = MemValue(sintbit(1))
+    b = MemValue(sintbit(0))
+    x = range(1, LOG_BOOK_SIZE)
+    msg = [1000001, 1000002, 1000003]
+    entries[:35] = [sint(5)] * 35
+    def insert_message(first_entry):
+
+        b.write(unwritten & (entries[first_entry].equal(sint(0))))
+        unwritten.write(unwritten ^ (b))
+        c = sint(1-b)
+        d = sint(b)
+        entries[first_entry] = c * entries[first_entry] + d * msg[0]
+        entries[first_entry+1] = c * entries[first_entry+1] + d * msg[1]
+    insert_message(0)
+    for i in x:
+        insert_message(i*SIZE_DIM_2)
+
+    new_entry = tuple(entries)
+    stop_timer(11)
+    oram[50] = new_entry
+
+    stop_timer(10)
+
+for_range(1000)(test)

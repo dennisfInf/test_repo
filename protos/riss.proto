@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package riss;
+
+message Share {
+    uint32 share_index = 1;
+    uint32 party_index = 2;
+    bytes value = 3;
+}
+
+message ShamirShare {
+    uint32 party_index = 1;
+    bytes value = 2;
+}
+
+
+message R {
+    uint32 party_index = 1;
+    bytes value = 2;
+}
+
+message Response{
+}
+
+service RISS {
+    rpc SendShare(Share) returns (Response) {}
+    rpc SendR(R) returns (Response) {}
+    rpc SendShamirShare(ShamirShare) returns (Response) {}
+}
+

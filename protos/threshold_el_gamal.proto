@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package el_gamal;
+
+message Response {
+}
+
+message Start{
+}
+
+
+message Signature{
+    bytes z = 1;
+    bytes r = 2;
+}
+
+message Proposed_Commitment {
+    uint32 player_id = 1;
+    bytes commitments = 2;
+    Signature signature = 3;
+}
+
+message Share {
+    uint32 receiver_index = 1;
+    bytes share = 2;
+}
+
+service DKG_Start{
+    rpc Init_DKG(Start) returns (Response) {}
+}
+
+message Commited_Share{
+    Share share = 1;
+    Proposed_Commitment commitment = 2;
+}
+
+
+service DKG {
+    rpc Send_Commited_Shares(Commited_Share) returns (Response) {}
+    rpc Send_Participant_PK(Participant_Public_Key) returns (Response) {}
+}
+
+
+message Participant_Public_Key{
+    bytes pk = 1;
+    uint32 player_id = 2;
+}
+
+message Ciphertext{
+    bytes c1 = 1;
+    uint32 ciphertext_id = 2;
+    bytes nizk_proof = 3;
+    bytes c2 = 4;
+}
+
+service TEG{
+    rpc InitDecryption(Ciphertext) returns (Response) {}
+}

@@ -1,0 +1,9 @@
+target_sources(ippa
+  PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/matrix_dist.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/key_gen.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/protocol.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/sign.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/verify.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/setup.cpp"
+)

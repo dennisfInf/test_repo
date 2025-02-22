@@ -1,0 +1,201 @@
+from path_oram import OptimalORAM
+from Compiler.library import print_ln, if_, do_while,crash
+from Compiler.types import MemValue
+
+bits = 15
+dim_2 = 6
+LOG_BOOK_SIZE = 100
+if len(program.args) > 1:
+    bits = int(program.args[1])
+if len(program.args) > 2:
+    n_rounds = int(program.args[2])
+if len(program.args) > 3:
+    program.active = bool(int(program.args[3]))
+
+
+SIZE_DIM_2 = dim_2 // 3
+dim_1 = 2**bits    
+entry_size= 32*3 
+oram = OptimalORAM(size=dim_1, entry_size=[entry_size]*(SIZE_DIM_2)*LOG_BOOK_SIZE, init_rounds=0, value_type=sint)
+
+start_timer(10)
+import util
+
+start_timer(11)
+x = range(0, LOG_BOOK_SIZE)
+
+#50 Dollar fine
+fine = 50
+
+check_in_type = sint(1)
+check_out_type = sint(0)
+inspect_type = sint(2)
+
+bits = 32
+
+bits_0 = sint(0).bit_decompose(bits)
+import util
+
+
+bits_1 = sint(1).bit_decompose(bits)
+bits_2 = sint(2).bit_decompose(bits)
+bits_3 = sint(3).bit_decompose(bits)
+bits_4 = sint(4).bit_decompose(bits)
+bits_5 = sint(5).bit_decompose(bits)
+bits_6 = sint(6).bit_decompose(bits)
+bits_7 = sint(7).bit_decompose(bits)
+bits_8 = sint(8).bit_decompose(bits)
+bits_9 = sint(9).bit_decompose(bits)
+bits_10 = sint(10).bit_decompose(bits)
+bits_11 = sint(11).bit_decompose(bits)
+
+#Check in
+#e msg := (check_in, 𝑡𝑟𝑎𝑖𝑛_𝑡𝑦𝑝𝑒, 𝑡𝑟𝑎𝑖𝑛_𝑛𝑢𝑚𝑏𝑒𝑟, 𝑡𝑒𝑟𝑚𝑖𝑛𝑎𝑙_𝑠𝑡𝑎𝑡𝑖𝑜𝑛, 𝑒𝑛𝑡𝑟𝑦_𝑠𝑡𝑎𝑡𝑖𝑜𝑛, 𝑒𝑛𝑡𝑟𝑦_𝑡𝑖𝑚𝑒)
+#check_out = 0, check_in = 1, inspect = 2, empty = 3
+
+#Check in 
+
+log_1_1 = bits_1 + bits_3 + bits_4
+log_1_2 = bits_1 + bits_5+ bits_4
+int_1_1 = sint.bit_compose(log_1_1)
+int_1_2 = sint.bit_compose(log_1_2)
+
+#Check out
+log_2_1 = bits_0 + bits_3 + bits_4
+log_2_2 = bits_1 + bits_2 + bits_4
+int_2_1 = sint.bit_compose(log_2_1)
+int_2_2 = sint.bit_compose(log_2_2)             #Price = (5-2)*2=6
+#Check in
+log_3_1 = bits_1 + bits_3 + bits_4
+log_3_2 = bits_1 + bits_8 + bits_4
+int_3_1 = sint.bit_compose(log_3_1)
+int_3_2 = sint.bit_compose(log_3_2)
+#Inspect
+log_4_1 = bits_2 + bits_3 + bits_4
+log_4_2 = bits_1 + bits_6 + bits_4
+int_4_1 = sint.bit_compose(log_4_1)
+int_4_2 = sint.bit_compose(log_4_2)
+#Check out
+log_5_1 = bits_0 + bits_3 + bits_4
+log_5_2 = bits_1 + bits_3 + bits_4
+int_5_1 = sint.bit_compose(log_5_1)              #Price = (8-3)*2=10
+int_5_2 = sint.bit_compose(log_5_2)
+#Check out
+log_6_1 = bits_0 + bits_3 + bits_4
+log_6_2 = bits_1 + bits_3 + bits_4
+int_6_1 = sint.bit_compose(log_6_1)         #Price = 50 fine 
+int_6_2 = sint.bit_compose(log_6_2)
+#Inspect
+log_7_1 = bits_2 + bits_3 + bits_4
+log_7_2 = bits_1 + bits_6 + bits_4
+int_7_1 = sint.bit_compose(log_7_1)          #Price = 50 fine 
+int_7_2 = sint.bit_compose(log_7_2)
+#Check out
+log_8_1 = bits_0 + bits_3 + bits_4
+log_8_2 = bits_1 + bits_3 + bits_4
+int_8_1 = sint.bit_compose(log_8_1)          #Price = 50 fine 
+int_8_2 = sint.bit_compose(log_8_2)
+#Check in
+log_9_1 = bits_1 + bits_3 + bits_4
+log_9_2 = bits_1 + bits_9 + bits_4
+int_9_1 = sint.bit_compose(log_9_1)     
+int_9_2 = sint.bit_compose(log_9_2)
+#Check out
+log_10_1 = bits_0 + bits_3 + bits_4
+log_10_2 = bits_1 + bits_5 + bits_4 
+int_10_1 = sint.bit_compose(log_10_1)         #Price = (9-5)*2=8  
+int_10_2 = sint.bit_compose(log_10_2)
+#Check in
+log_11_1 = bits_1 + bits_3 + bits_4
+log_11_2 = bits_1 + bits_9 + bits_4
+int_11_1 = sint.bit_compose(log_11_1)
+int_11_2 = sint.bit_compose(log_11_2)
+#Check in
+log_12_1 = bits_1 + bits_3 + bits_4
+log_12_2 = bits_1 + bits_9 + bits_4
+int_12_1 = sint.bit_compose(log_12_1)   #Price = 50 fine 
+int_12_2 = sint.bit_compose(log_12_2)
+
+list = [int_1_1,int_1_2,int_2_1,int_2_2,int_3_1,int_3_2,int_4_1,int_4_2,int_5_1,int_5_2,int_6_1,int_6_2,int_7_1,int_7_2,int_8_1,int_8_2,int_9_1,int_9_2,int_10_1,int_10_2,int_11_1,int_11_2,int_12_1,int_12_2]
+list_2 = [sint(3)]*((LOG_BOOK_SIZE-12) * SIZE_DIM_2)
+new_list = list + list_2
+oram[50] = new_list
+
+
+
+
+
+def analytics(_=None):
+    price = MemValue(sint(0))
+
+    last_train = MemValue(sint(0))
+    last_train_number = MemValue(sint(0))
+    last_station = MemValue(sint(0))
+    last_terminal_station = MemValue(sintbit(0))
+    entries = oram[50]
+    current_index = MemValue(sint(0))
+    checked_in = MemValue(sintbit(0))
+    check_out_before = MemValue(sintbit(0))
+
+    def insert_message(entry_index,checked_in,last_train,last_station,last_train_number,price,fine):
+
+
+        decomposed_bits_entry = entries[entry_index].bit_decompose(entry_size)
+        check_in_type = decomposed_bits_entry[0]
+        is_inspect = decomposed_bits_entry[1]
+        is_empty = check_in_type & is_inspect
+
+
+
+
+        decomposed_bits_entry2 = entries[entry_index+1].bit_decompose(entry_size)
+
+
+
+        #Equals 1 if checked in before or if not checked in and inspect or check out
+        is_fine =  sintbit(1) ^ (checked_in.read() ^ check_in_type)
+        current_train = sint.bit_compose(decomposed_bits_entry[32:64])
+        current_train_number = sint.bit_compose(decomposed_bits_entry[64::])
+        current_train_station = sint.bit_compose(decomposed_bits_entry2[32:64])
+
+
+
+        #Last train is equal to the  current train on check in, otherwise not
+        d = 1 ^ check_in_type
+        last_train.write(check_in_type * current_train + d * last_train.read())
+
+        #Likewise
+        last_train_number.write(check_in_type * current_train_number + d * last_train_number.read())
+        last_station.write(check_in_type * current_train_station + d * last_station.read())
+    
+        #naming is bad here
+
+
+        is_fine = is_fine | last_train.read().not_equal(current_train) | last_train_number.read().not_equal(current_train_number)
+        price_after_fine = is_fine * fine + (1^is_fine) * 0
+
+
+        #If checkout then checked in should be 0, if check in then 1 and only 1 if already checked in on inspect
+        checked_in.write((checked_in.read() & is_inspect) | check_in_type)
+
+        # add price if is check out 
+        is_checkout = (sintbit(1)^(check_in_type | is_inspect))& (1^is_fine)
+
+        ticket_price = (is_checkout) * (abs((last_station.read()-current_train_station))*2) + (1^is_checkout) * 0
+        price_after_ticket = is_checkout * ticket_price + (1^is_checkout) * 0
+        price.write(price.read() + (is_empty * 0 + (1^is_empty) * (price_after_ticket+price_after_fine)))
+
+
+   
+
+    for i in x:
+        print_ln("iteration %s",i)
+        insert_message(i*SIZE_DIM_2,checked_in,last_train,last_station,last_train_number,price,fine)
+    print_ln('price: %s', (price).reveal()) 
+
+
+start_timer(15)
+for_range(50)(analytics)
+stop_timer(15)
+
+

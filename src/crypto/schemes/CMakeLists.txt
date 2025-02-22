@@ -1,0 +1,6 @@
+include(${CMAKE_CURRENT_LIST_DIR}/secret_sharing/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/threshold_el_gamal/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/tsps/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/bls_sig/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/tots/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/riss/CMakeLists.txt)

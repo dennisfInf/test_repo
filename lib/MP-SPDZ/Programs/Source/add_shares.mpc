@@ -1,0 +1,204 @@
+# Import the necessary module for elliptic curve operations
+from Compiler.ecc import *
+from Compiler.program import *
+from Compiler.library import print_ln, do_while, for_range, crash, get_number_of_players, get_player_id
+from Compiler.types import sint, regint, Array, MemValue, localint
+from Compiler.util import if_else
+program.set_bit_length(379)
+program.use_edabit(True)
+PORTNUM = 14000
+# MUST BE KNOWN AT COMPILE TIME
+MAX_NUM_CLIENTS = 3
+THRESHOLD = 2
+n_rounds = 0
+n_threads = 2
+if len(program.args) > 1:
+    MAX_NUM_CLIENTS = int(program.args[1])
+if len(program.args) > 2:
+    THRESHOLD = int(program.args[2])
+if len(program.args) > 3:
+    n_rounds = int(program.args[3])
+if len(program.args) > 4:
+    program.active = bool(int(program.args[4]))
+
+
+def accept_client():
+    client_socket_id = accept_client_connection(PORTNUM)
+    bootstrapper = regint.read_from_socket(client_socket_id)
+    return client_socket_id,bootstrapper
+
+
+def close_connections(number_clients):
+    @for_range(number_clients)
+    def _(i):
+        closeclientconnection(i)
+
+def client_input(t, client_socket_id):
+    """
+    Send share of random value, receive input and deduce share.
+    """
+    
+    return t.receive_from_client(2, client_socket_id)
+
+def output_mpc_finished_to_clients(sockets, number_clients):
+    print_ln("number_clients: %s", number_clients.read())
+    sint.reveal_to_clients(sockets.get_sub(number_clients.read()),[sint(0)])
+
+
+# Function to check if a number is odd
+def is_odd(n):
+    # Return true if the number is odd, false otherwise
+    return (n & 1) == 1
+
+
+# Function to sum up points
+# 
+def sum_points(input):
+    # Get the input points
+    # Initialize the size of the result
+    result_size = cint(THRESHOLD)
+
+    # Loop until the size of the result is more than 1
+    @do_while
+    def _():
+        # Initialize the size of the new result
+        new_result_size = cint(0)
+
+        # Loop over the input points in pairs
+        @for_range_opt(0,result_size-1, 2)
+        def _(i):
+            # Add the current pair of points and store the result in the input array
+
+            input[new_result_size] = add_points_bernstein(input[i][0],input[i][1],input[i][2], input[i+1][0], input[i+1][1],input[i+1][2])
+            # Increase the size of the new result
+            new_result_size.update(new_result_size + 1)
+
+        # If the size of the result is odd and more than 1
+        @if_(is_odd(result_size) & (new_result_size >= 1))
+        def _():
+            # Increase the size of the new result
+            input[new_result_size]= input[result_size-1]
+            new_result_size.update(new_result_size + 1)
+            # Copy the last point of the result to the input array
+
+        # Update the size of the result
+        result_size.update(new_result_size)
+
+        # Continue the loop if the size of the result is more than 1
+        return result_size > 1
+
+    # Return the first point of the result
+    return input[0]
+
+def main():
+
+    """Listen while all clients connect to the mpc.
+    Once maxiumum reached or have notified that round finished, add the shares and return result."""
+    # Start listening for client socket connections
+    listen_for_clients(PORTNUM)
+    print_ln('Listening for client connections on base port %s', PORTNUM)
+
+    def game_loop(_=None):
+        print_ln('Starting a new round of the game.')
+
+        # Clients socket id (integer).
+        client_sockets = Array(MAX_NUM_CLIENTS, regint)
+        # Number of clients
+        number_clients = MemValue(regint(0))
+        # Client ids to identity client
+        client_ids = Array(MAX_NUM_CLIENTS, sint)
+        # Keep track of received inputs
+        seen = Array(MAX_NUM_CLIENTS, regint)
+        seen.assign_all(0)
+
+        bootstrapper_id = MemValue(regint(0));
+        # Loop round waiting for each client to connect
+        @do_while
+        def client_connections():
+            client_id,bootstrapper  = accept_client()
+            print_ln('adding new client')
+            print_ln('client id: %s', client_id)
+            @if_(client_id >= MAX_NUM_CLIENTS)
+            def _():
+                print_ln('client id too high')
+                crash()
+            @if_(bootstrapper > 0)
+            def _():
+                bootstrapper_id.write(client_id)
+            client_sockets[client_id] = client_id
+            client_ids[client_id] = client_id
+            seen[client_id] = 1
+            sum_seen = sum(seen)
+            @if_(sum_seen == MAX_NUM_CLIENTS)
+            def _():
+                print_ln("number_clients cleint_id: %s", client_id)
+
+                number_clients.write(sum_seen)
+
+            return (MAX_NUM_CLIENTS > sum_seen) + (sum_seen == 0)
+
+        def type_run(_=None):
+            t = sint
+            # Clients secret input.
+            print_ln("waiting for inputs \n")
+
+            client_values = t.Tensor([THRESHOLD,3])  
+            bootstrap_share =  Array(2, sint)
+            print_ln('reached type here.')
+   
+            @for_range_multithread(THRESHOLD+1, 1, THRESHOLD+1)
+            def _(client_id):
+
+                @if_e(bootstrapper_id.read() == client_id)
+                def _():
+
+                   bootstrap_share_input = client_input(t, client_id)
+                   print_ln("\n bootstrap input received")
+
+                   bootstrap_share[regint(0)] = bootstrap_share_input[0]
+                   bootstrap_share[regint(1)] = bootstrap_share_input[1]
+                @else_
+                def _():
+                    index = MemValue(client_id)
+                    @if_(bootstrapper_id.read() < client_id)
+                    def _():
+                        index.write(client_id - 1)
+                    client_input_list = client_input(t, client_id)
+                    print_ln("\n client input received")
+
+                    client_input_list.append(sint(1))
+
+
+                    client_values[index.read()]=client_input_list
+
+            print_ln("\n inputs received")
+            start_timer(20)
+
+
+            #sum_shares =  add_points_bernstein(client_values[0][0],client_values[0][1],1,client_values[1][0], client_values[1][1],1)
+            #sum_shares2 =  add_points_bernstein(sum_shares[0],sum_shares[1],sum_shares[2],client_values[2][0], client_values[2][1],1)
+
+            sum_shares = sum_points(client_values)
+            result =  add_points_bernstein(bootstrap_share[0],bootstrap_share[1],1, sum_shares[0], -sum_shares[1],sum_shares[2])
+            x = norm_point(result[0],result[2])
+            print_ln("\n otuput..")
+
+            sint.write_shares_to_socket(get_player_id().get_regint(), x)
+            stop_timer(20)
+            
+        
+        for_range(50)(type_run)
+        print_ln('reached type input.')
+
+        close_connections(number_clients)
+
+        return True
+
+    if n_rounds > 0:
+        print('run %d rounds' % n_rounds)
+        for_range(n_rounds)(game_loop)
+    else:
+        print('run forever')
+        do_while(game_loop)
+
+main()
