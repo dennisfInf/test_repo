@@ -32,3 +32,7 @@ After that, you are able to run the project with:
 
 
 ## semi-honest will follow shortly
+
+
+## Bugs
+Currently, the input check for MPC2 in the malicious setting does not work correctly. 
