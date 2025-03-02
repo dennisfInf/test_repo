@@ -3,6 +3,24 @@ from Compiler.ecc import *
 test_x = sint(3461623349706694761445824932273134450444915492168870923488586307290915594789628620299629716629622128844815571192003)
 test_y = sint(218508610162712081295967675061842843425496012805282628629781438897778026185844416475521808694780126929471833104510)
 res = point_doubling_alnr(test_x,test_y,sint(1))
+
+
+res1 = point_doubling_alnr(sint(1),sint(1),sint(1))
+res2 = add_points_bernstein(sint(1),sint(1),sint(1),test_x,test_y,sint(1))
+res2 = norm_point_with_y(*res2)
+
+res3 = add_points_bernstein(sint(1),sint(1),sint(1),test_x,test_y,test_y*2)
+
+
+
 res = norm_point_with_y(*res)
-print_ln("res 1 x: %s \n", res[0].reveal())
-print_ln("res 1 y: %s \n", res[1].reveal())
+print_ln("res  x: %s \n", res[0].reveal())
+print_ln("res  y: %s \n", res[1].reveal())
+print_ln("res 1 x: %s \n", res1[0].reveal())
+print_ln("res 1 y: %s \n", res1[1].reveal())
+print_ln("res 1 z: %s \n", res1[2].reveal())
+print_ln("res 2 x: %s \n", res2[0].reveal())
+print_ln("res 2 y: %s \n", res2[1].reveal())
+print_ln("res 3 x: %s \n", res3[0].reveal())
+print_ln("res 3 y: %s \n", res3[1].reveal())
+print_ln("res 3 z: %s \n", res3[2].reveal())

@@ -27,7 +27,10 @@ namespace TEG
     void share_point(BilinearGroup::G1 &point);
     void run_dkg(grpc::DKGServiceImpl *service, const uint8_t &n, const uint8_t &t);
     DecryptionShare share_c1_and_get_decryption_share(Participants::ciphertext &ciphertext, GS::zkp::GS_Proof &proof, uint8_t &t);
-    DecryptionShare calc_decryption_share(BilinearGroup::G1 &c1, int &ciphertext_id, uint8_t &t);
+    virtual DecryptionShare calc_decryption_share(BilinearGroup::G1 &c1, int &ciphertext_id, uint8_t &t);
+    DecryptionShare calc_decryption_share_wo_lagrange(BilinearGroup::G1 &c1, int &ciphertext_id);
+    DecryptionShare share_c1_and_get_decryption_share_mal(Participants::ciphertext &ciphertext, GS::zkp::GS_Proof &proof, uint8_t &t);
+
     BilinearGroup::G1 get_public_key() { return participant.get_public_key(); }
     BilinearGroup::G1 get_participant_public_key() { return participant.get_public_key(); }
     el_gamal::Ciphertext receive_ciphertext(grpc::TEGServiceImpl *service);
@@ -43,6 +46,12 @@ namespace TEG
     std::shared_ptr<std::mutex> ciphertext_id_mtx;
     int receive_ciphertext_id();
   };
+
+  class ProtocolForMal: public Protocol{
+
+  };
+
+  
   Protocol init_protocol(const uint8_t &n, const uint8_t &t, const uint8_t &index,
                          const std::vector<Networking::Client> &participants,
                          std::map<std::string, grpc::Service *> &services);

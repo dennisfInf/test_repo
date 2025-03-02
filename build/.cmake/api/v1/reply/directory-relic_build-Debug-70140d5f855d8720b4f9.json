@@ -1,0 +1,126 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"lib/relic/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 354,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 356,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 357,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 359,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/relic",
+			"paths" : 
+			[
+				"lib/relic/include/relic.h",
+				"lib/relic/include/relic_alloc.h",
+				"lib/relic/include/relic_arch.h",
+				"lib/relic/include/relic_bc.h",
+				"lib/relic/include/relic_bench.h",
+				"lib/relic/include/relic_bn.h",
+				"lib/relic/include/relic_core.h",
+				"lib/relic/include/relic_cp.h",
+				"lib/relic/include/relic_dv.h",
+				"lib/relic/include/relic_eb.h",
+				"lib/relic/include/relic_ec.h",
+				"lib/relic/include/relic_ed.h",
+				"lib/relic/include/relic_ep.h",
+				"lib/relic/include/relic_epx.h",
+				"lib/relic/include/relic_err.h",
+				"lib/relic/include/relic_fb.h",
+				"lib/relic/include/relic_fbx.h",
+				"lib/relic/include/relic_fp.h",
+				"lib/relic/include/relic_fpx.h",
+				"lib/relic/include/relic_label.h",
+				"lib/relic/include/relic_md.h",
+				"lib/relic/include/relic_mpc.h",
+				"lib/relic/include/relic_multi.h",
+				"lib/relic/include/relic_pc.h",
+				"lib/relic/include/relic_pp.h",
+				"lib/relic/include/relic_rand.h",
+				"lib/relic/include/relic_test.h",
+				"lib/relic/include/relic_types.h",
+				"lib/relic/include/relic_util.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include/relic/low",
+			"paths" : 
+			[
+				"lib/relic/include/low/relic_bn_low.h",
+				"lib/relic/include/low/relic_dv_low.h",
+				"lib/relic/include/low/relic_fb_low.h",
+				"lib/relic/include/low/relic_fp_low.h",
+				"lib/relic/include/low/relic_fpx_low.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "include/relic",
+			"paths" : 
+			[
+				{
+					"from" : "build/relic_build/include",
+					"to" : "."
+				}
+			],
+			"type" : "directory"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"paths" : 
+			[
+				"lib/relic/cmake/relic-config.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "relic_build",
+		"source" : "lib/relic"
+	}
+}

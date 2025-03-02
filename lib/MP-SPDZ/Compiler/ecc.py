@@ -105,31 +105,48 @@ def point_doubling_alnr(X1,Y1,Z1):
       return X3,Y3,Z3
 
 #scalars are two dimensional vecs, where the first dimension are the variables and the second dimension the bits of the variables
-def multi_exp_shamir_method(points,scalars,batch_size):
-    X = sint.Tensor([3,batch_size])
-    for i in range(3):
-        X[i] = list([sint(1)]*batch_size)
-    bit_length = len(scalars)
-    # Number of threads to use
-    print("type1: %s",type(X))
-    num_threads = 4
-    @if_(check_if_non_zerovec(scalars,bit_length-1))
+def multi_exp_shamir_method(points,scalars):
+    bit_length = len(scalars[0])
+    iterator = MemValue(cint(bit_length))
+
+    # Loop until there is a non zero scalar vector at bit position iterator
+    # scalar vectors only containing zeros can be ignored and this is why it's done here for a performance boost
+    scalar_index  = MemValue(regint(0))
+    @do_while
     def _():
-        nonlocal X
-        X = sequential_weighted_sum(points,scalars,len(scalars)-1)
-        print("type2: %s",type(X))
-    @for_range_opt(bit_length-2,-1,-1)
-    def _(i):
-        nonlocal X
-        X = point_doubling_alnr(X[0],X[1],X[2])
-        print("type3: %s",type(X))
-        @if_(check_if_non_zerovec(scalars,i))
-        def _():
-            nonlocal X
-            weighted_sum = sequential_weighted_sum(points,scalars, i)
-            X = add_points_bernstein(X[0],X[1],X[2],weighted_sum[0],weighted_sum[1],weighted_sum[2])
-            print("type4: %s",type(X))
-    print("type5: %s",type(X))
+        iterator.write(iterator.read()-1)
+        check,index = check_if_non_zerovec(scalars,iterator.read())
+        scalar_index.write(index)
+        return 1-(check).bit_or(iterator.read() <= cint(0))
+    X = sint.Tensor([3,len(points[0][0])])
+
+    #Should there not a single bit vector over all scalars be found that is non zero, then the point at infinity is returned
+    @if_e(iterator.read()<0)
+    def _():
+        for i in range(3):
+            X[i] = list([sint(1)]*len(points[0][0]))
+        print_ln("whole scalar vec only contained zeros: %s" , X[0].reveal())
+
+    @else_
+    def _():
+        # Did this outside the loop of the orginal shamir method, since point doubling the point at infinity is equal to the point at infinity.
+        # would result in unneccessary computation
+        X[0],X[1],X[2] = sequential_weighted_sum(points,scalars,iterator.read(),scalar_index.read())
+        # result should not equal to point at inifnity now, since we made sure that at positon iterator, where is at least one bit that is a one in the bit vec
+        l = iterator.read() -1
+        @for_range_opt(l,regint(-1),regint(-1))
+        def _(i):
+# For whatever reason this loop runs until i=-2, seems like a bug of mpspdz
+            @if_(i>=0)
+            def _():
+                X[0],X[1],X[2] = point_doubling_alnr(X[0],X[1],X[2])
+                check,index = check_if_non_zerovec(scalars,i)
+                scalar_index.write(index)
+                @if_(check==cint(1))
+                def _():
+                    weighted_sum = sequential_weighted_sum(points,scalars, i,scalar_index.read())
+                    X[0],X[1],X[2] = add_points_bernstein(X[0],X[1],X[2],weighted_sum[0],weighted_sum[1],weighted_sum[2])
+
 
     return X
 
@@ -140,10 +157,14 @@ def norm_point(X,Z):
 def norm_point_with_y(X,Y,Z):
     Z2 = Z*Z
     Z3 = Z2*Z
-    return X.field_div(Z2),Y.field_div(Z3)
+    result = sint.Tensor([2,len(X)])
+    for i in range(len(X)):
+        result[0][i] = X[i].field_div(Z2[i])
+        result[1][i] = Y[i].field_div(Z3[i])
+    return result
 
 
-def sequential_weighted_sum(values, scalars, position):
+def sequential_weighted_sum(values, scalars, position,scalar_index):
     """
     Computes the sum of P * i for each P in values and corresponding i in scalars.
     Skips multiplication when i == 0. Executes sequentially.
@@ -157,24 +178,43 @@ def sequential_weighted_sum(values, scalars, position):
     if len(values) != len(scalars):
         raise ValueError("The lengths of values and scalars must be the same.", len(values), len(scalars))
 
-    # Initialize the total sum as a tuple of secure values
-    total_sum = values[0]
+    # Initialize the total sum as a tuple of secure values    
+    X = sint.Tensor([3,len(values[0][0])])
 
+        # else assign the first point where the first bit is 1 to the sum instead adding it with the point at infinity
+
+
+    X[0] = values[scalar_index][0]
+    X[1] = values[scalar_index][1]
+    X[2] = values[scalar_index][2]
     # Iterate over all values and scalars sequentially
-    for j in range(1,len(values)):
+    @for_range(scalar_index+1,len(values))
+    def _(j):
         bit = scalars[j][position] != 0  # Check if the scalar is non-zero
         @if_(bit)
         def _():
+            print_ln("scalar %s at position %s is added", j,position)
             # Add the current value to the total sum using add_points_bernstein
-            nonlocal total_sum
-            total_sum = add_points_bernstein(
-                total_sum[0],
-                total_sum[1],
-                total_sum[2],
+            X[0],X[1],X[2] = add_points_bernstein(
+                X[0],
+                X[1],
+                X[2],
                 values[j][0],
                 values[j][1],
                 values[j][2]
             )
+        # Doing the addition with the weighted sum in this method. This avoids, that the result of the weighted sum is the point at infinity, which is not handled
+        # by the addition formula
+
+    return X
+
+
+def test_mul_exp(values, scalars):
+    for i in range(len(scalars[0])):
+        point_doubling_alnr(X[0],X[1],X[2])
+
+
+
+
 
     # Return the final computed weighted sum
-    return total_sum
