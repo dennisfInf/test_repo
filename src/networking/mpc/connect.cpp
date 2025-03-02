@@ -95,8 +95,6 @@ namespace MPC
       points[i].share.norm();
       std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> coords = points[i].share.get_coordinates();
       std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> coords_c = ciphertexts[i].get_coordinates();
-      std::cout << "coords for c2 index " << i << std::endl;
-      ciphertexts[i].print_coordinates();
       coordinates[i] = MPC::deserialize_bytes(std::get<0>(coords));
       coordinates[batch_size + i] = MPC::deserialize_bytes(std::get<1>(coords));
       coordinates[batch_size * 2 + i] = MPC::deserialize_bytes(std::get<0>(coords_c));

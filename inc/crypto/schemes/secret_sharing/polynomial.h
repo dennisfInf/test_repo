@@ -22,4 +22,6 @@ T Horners_method(const std::vector<T> &polynomial, const BilinearGroup::BN &x, c
 }
 
 BilinearGroup::BN get_lagrange_coeff(const BilinearGroup::BN &x_coord, const uint8_t &player_index, const uint8_t &n);
+BilinearGroup::BN get_lagrange_coeff_start(const BilinearGroup::BN &x_coord, const uint8_t &player_index, const uint8_t start, const uint8_t &n);
+
 } // namespace Polynomial

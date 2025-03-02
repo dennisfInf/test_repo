@@ -2,8 +2,10 @@
 #include "group.h"
 #include "iostream"
 #include <gmp.h>
+#include "crypto/schemes/riss/riss.h"
 #include <string>
 #include <vector>
+#include <crypto/schemes/secret_sharing/polynomial.h>
 namespace Config
 {
 
@@ -64,11 +66,6 @@ namespace Config
   {
     std::cout << "Relic configuration:\n";
     BilinearGroup::config();
-    BilinearGroup::G1 x1 = BilinearGroup::G1::rand();
-    x1.print_coordinates();
-    BilinearGroup::G1 x2 = x1 + x1;
-    x2.norm();
-    x2.print_coordinates();
     std::cout << "\n";
 
     // Reads the hostnames of these files

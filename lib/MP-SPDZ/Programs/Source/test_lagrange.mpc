@@ -1,0 +1,15 @@
+from Compiler.check_shares import *
+
+s1 = cint(2)
+s2 = cint(5541245505022739011583672869577435255026888277144126952448297309161979278754528049907713682488818304329661351460876)
+lagrange  = compute_lagrange_coeffs_no_decompose(2,cint(0), 1, 2)
+print_ln("lagrange 2:1: %s", s2)
+
+print_ln("lagrange 2:1: %s", lagrange[1])
+
+print_ln("1: %s, 2: %s",s1==lagrange[0],s2==lagrange[1])
+
+test_2 = lagrange_coefficient_secret_sharing(2,2)
+print_ln("lagrange 2: %s",test_2)
+
+print_ln("3: %s",s2==test_2)

@@ -18,6 +18,8 @@ namespace Participants
     Participant(KeyPair key_pair);
     ciphertext encrypt(const FP &message);
     G1 compute_decryption_share(const G1 &c1, const int &n, const int &id);
+    G1 compute_decryption_share_without_lagrange(const G1 &c1);
+
     G1 decrypt(const G1 &composed_shares, const G1 &c2);
     G1 get_public_key() { return this->key_pair.group_public; };
     G1 get_participant_public_key() { return this->key_pair.secret_pub; };

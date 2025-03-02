@@ -1,0 +1,35 @@
+{
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_custom_target"
+		],
+		"files" : 
+		[
+			"lib/relic/src/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 189,
+				"parent" : 0
+			}
+		]
+	},
+	"id" : "arith_objs::@90dc6565fe15e8c61978",
+	"name" : "arith_objs",
+	"paths" : 
+	{
+		"build" : "relic_build/src",
+		"source" : "lib/relic/src"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

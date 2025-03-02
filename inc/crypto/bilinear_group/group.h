@@ -13,6 +13,9 @@ class G1;
 class G2;
 class GT;
 
+
+
+
 void config();
 
 std::vector<uint8_t> hash(const uint8_t input[], int len);

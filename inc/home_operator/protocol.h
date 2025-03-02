@@ -52,9 +52,6 @@ namespace bookkeeping
 
     bool prove_entry(proof_prove_entry &ppe, tsps::Protocol *tsps);
     virtual bool prove_entry([[maybe_unused]] proof_prove_entry &ppe) { return false; };
-    BenchmarkInsertEntry calc_decryption_shares(BilinearGroup::BN &period, BilinearGroup::BN &msg, int &runs, int &batch_size, tsps::Protocol *tsps);
-    virtual BenchmarkInsertEntry calc_decryption_shares([[maybe_unused]] BilinearGroup::BN &period, [[maybe_unused]] BilinearGroup::BN &msg, [[maybe_unused]] int &runs, [[maybe_unused]] int &batch_size) { return BenchmarkInsertEntry{}; };
-
     ThresholdSignature register_user(bookkeeping::proof_sk_u &proof_sk_u, tsps::Protocol *tsps);
     virtual ThresholdSignature register_user([[maybe_unused]] bookkeeping::proof_sk_u &proof_sk_u) { return ThresholdSignature{}; };
 
@@ -68,11 +65,11 @@ namespace bookkeeping
     MPC::MPCClient mpc_client;
     uint8_t t;
     grpc::TEGServiceImpl *tegService;
+    bool verify_create_entry_proof(proof_create_entry_user &p_ce, std::vector<uint8_t> &h, tsps::Protocol *tsps);
 
   private:
     BilinearGroup::FP current_addr;
     BilinearGroup::FP retrieve_current_addr() { return current_addr; };
-    bool verify_create_entry_proof(proof_create_entry_user &p_ce, std::vector<uint8_t> &h, tsps::Protocol *tsps);
     void increment_addr() { current_addr.increment(); };
     std::vector<LKey> l_keys;
     std::mutex l_lkeys_mtx;
@@ -120,17 +117,14 @@ namespace bookkeeping
     {
       return this->HomeOperator::create_entry(p_ce, msg, period, tsps);
     }
-    BenchmarkInsertEntry calc_decryption_shares(BilinearGroup::BN &period, BilinearGroup::BN &msg, int &runs, int &batch_size) override
-    {
-      return this->HomeOperator::calc_decryption_shares(period, msg, runs, batch_size, tsps);
-    }
     ThresholdSignature register_user(bookkeeping::proof_sk_u &proof_sk_u) override
     {
       return this->HomeOperator::register_user(proof_sk_u, tsps);
     }
     virtual BenchmarkInsertEntry insert_entry([[maybe_unused]] int &runs, [[maybe_unused]] int &batch_size) { return BenchmarkInsertEntry{}; }
+    virtual BenchmarkInsertEntry calc_decryption_shares([[maybe_unused]] BilinearGroup::BN &period, [[maybe_unused]] BilinearGroup::BN &msg, [[maybe_unused]] int &runs, [[maybe_unused]] int &batch_size) { return BenchmarkInsertEntry{}; };
 
-  private:
+  protected:
     tsps::Protocol *tsps;
   };
   class HomeOperatorHonest : public HomeOperatorBase
@@ -145,6 +139,7 @@ namespace bookkeeping
     {
     }
     BenchmarkInsertEntry insert_entry(int &runs, int &batch_size) override;
+    BenchmarkInsertEntry calc_decryption_shares(BilinearGroup::BN &period, BilinearGroup::BN &msg, int &runs, int &batch_size) override;
   };
 
   class HomeOperatorMal : public HomeOperatorBase
@@ -159,5 +154,6 @@ namespace bookkeeping
     {
     }
     BenchmarkInsertEntry insert_entry(int &runs, int &batch_size) override;
+    BenchmarkInsertEntry calc_decryption_shares(BilinearGroup::BN &period, BilinearGroup::BN &msg, int &runs, int &batch_size) override;
   };
 } // namespace bookkeeping

@@ -35,6 +35,11 @@ G1 Participants::Participant::compute_decryption_share(const G1 &c1, const int &
   return c1 * (this->key_pair.secret * Polynomial::get_lagrange_coeff(BilinearGroup::BN(0), id, n));
 }
 
+G1 Participants::Participant::compute_decryption_share_without_lagrange(const G1 &c1)
+{
+  return c1 * this->key_pair.secret;
+}
+
 // Decrypts a ciphertext c2 with the composed shares of the participants and checks the size of c2
 G1 Participants::Participant::decrypt(const G1 &composed_shares, const G1 &c2) { return c2 - composed_shares; }
 

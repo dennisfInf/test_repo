@@ -108,13 +108,41 @@ namespace TEG
     return {ciphertext_id, participant.compute_decryption_share(ciphertext.c1, t + 1, my_index)};
   }
 
+  DecryptionShare Protocol::share_c1_and_get_decryption_share_mal(Participants::ciphertext &ciphertext, GS::zkp::GS_Proof &proof, uint8_t &t)
+  {
+    el_gamal::Ciphertext c_serialized;
+    int ciphertext_id = this->receive_ciphertext_id();
+    c_serialized.set_c1(grpc::serialize_to_string(ciphertext.c1));
+    c_serialized.set_c2(grpc::serialize_to_string(ciphertext.c2));
+    c_serialized.set_ciphertext_id(ciphertext_id);
+    std::vector<uint8_t> buffer;
+    BilinearGroup::Serializer serializer(buffer);
+    serializer << proof;
+    std::string str(buffer.begin(), buffer.end());
+    c_serialized.set_nizk_proof(str);
+
+    for (int i = 0; i < this->participants.size(); i++)
+    {
+      Networking::Stub<el_gamal::TEG> stub = this->participants[i].createStub<el_gamal::TEG>();
+      stub.send<el_gamal::Ciphertext, el_gamal::Response>(c_serialized, i + 1,
+                                                          [](el_gamal::TEG::Stub *stub, grpc::ClientContext *context,
+                                                             el_gamal::Ciphertext *request, el_gamal::Response *response)
+                                                          {
+                                                            grpc::Status status =
+                                                                stub->InitDecryption(context, *request, response);
+                                                            return status;
+                                                          });
+    }
+    return {ciphertext_id, participant.compute_decryption_share_without_lagrange(ciphertext.c1)};
+  }
+
   void Protocol::share_point(BilinearGroup::G1 &point)
   {
     el_gamal::Ciphertext c_serialized;
     int ciphertext_id = this->receive_ciphertext_id();
     c_serialized.set_c1(grpc::serialize_to_string(point));
     c_serialized.set_c2(grpc::serialize_to_string(point));
-    c_serialized.set_ciphertext_id(ciphertext_id);
+    c_serialized.set_ciphertext_id(my_index);
     std::vector<uint8_t> buffer;
     BilinearGroup::Serializer serializer(buffer);
     std::string str(buffer.begin(), buffer.end());
@@ -137,6 +165,11 @@ namespace TEG
   {
     return {ciphertext_id,
             this->participant.compute_decryption_share(c1, t + 1, my_index)};
+  }
+
+  DecryptionShare Protocol::calc_decryption_share_wo_lagrange(BilinearGroup::G1 &c1, int &ciphertext_id)
+  {
+    return {ciphertext_id, this->participant.compute_decryption_share_without_lagrange(c1)};
   }
   int Protocol::receive_ciphertext_id()
   {
