@@ -1,5 +1,0 @@
-Using statistical security parameter 40
-Starting timer 20 at 0 (0 MB, 0 rounds) after 3.7378e-05
-Stopped timer 20 at 0.024798 (0.154736 MB, 35 rounds)
-terminate called after throwing an instance of 'boost::wrapexcept<boost::system::system_error>'
-  what():  read_some: Connection reset by peer [system:104]
