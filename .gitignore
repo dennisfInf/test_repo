@@ -1,4 +1,8 @@
-/build
-/Player-Data
-/scripts/Player-Data
-/benchmarks
+build/
+.vscode/
+.clang-format
+backup/
+hostnames.txt
+certs/
+Player-Data/
+benchmarks/
