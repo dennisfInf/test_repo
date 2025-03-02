@@ -1,6 +1,10 @@
 ## Important Notes
-We have 3 seperate projects (one for GigaDORAM, one for semi-honest and one for malicious), which made developing easier. This project now is the first step to merge all three projects, but is a prerelease version that is not fully tested. Currently, only semi-honest and malicious are merged and GigaDORAM will probabily be included too next week. Also, we will do additional bug-testing next week.
-This project version was (currently) only tested with n=3 t=1 and only locally (but should work with arbitrary parameters)
+We have 3 seperate projects (one for GigaDORAM, one for semi-honest and one for malicious), which made developing easier. This project now is the first step to merge all three projects, but is a prerelease version that is not fully tested. Currently, only semi-honest and malicious are merged and GigaDORAM will probabily be included too next week. Some more bug-testing needs to be done here. This code is very complex and required much work, so it will not be bug-free (hope that this is understandable).
+
+This code tries to use all threads of the underlying system. In doing so (since we are no pros)
+it sometimes does no progress, since some threads are occupied. Restarting the container helps then.
+This project version was (currently) only tested with n=3 t=1 and only locally (but should work with arbitrary parameters).
+In the release version, we will extend the read me to fully recreate our experiments. 
 
 Tested Parameters:
 add_shares_vec_mal 3 1 1 100
@@ -20,6 +24,11 @@ logbook_size is equal to the amount of entries inside a logbook per user
 bits is equal to 2^{bits} logbook addresses.
 If you plan to also try out semi-honest and Gigadoram, compile their mpc's first by using the ../compile.py .... commands. 
 With this, you are able to use the same containers accross the different attacker models.
+
+In the root folder of the repository create a benchmarks folder:
+
+mkdir -p ./benchmarks
+
 Now to build the docker files use (this will take a while):
 
 ./scripts/build_docker.zsh
@@ -42,6 +51,10 @@ Similiarly compile the mpc's:
 ./lib/MP-SPDZ/compile.py -P 5541245505022739011583672869577435255026888277144126952450651294188487038640194767986566260919128250811286032482323 add_shares_vec n t 1 batch_size
 and
 ./lib/MP-SPDZ/compile.py oram_honest n logbook_size bits 
+
+In the root folder of the repository create a benchmarks folder:
+
+mkdir -p ./benchmarks
 
 Now to build the docker files use:
 
