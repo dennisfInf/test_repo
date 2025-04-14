@@ -3,9 +3,16 @@
 #include "vector"
 #include <cstdint>
 #include "crypto/bilinear_group/group.h"
+#include "networking/client.h"
 
 namespace Config
 {
+  struct Parties
+  {
+    std::string prev;
+    std::string next;
+  };
+
   struct Values
   {
     uint8_t n_parties;
@@ -21,8 +28,13 @@ namespace Config
     uint8_t k;
     bool malicious;
     int oram_addresses;
+    int num_levels;
+    int amp_factor;
   };
 
   Values create_config(int argc, char **argv);
 
+  Parties get_addresses(std::tuple<std::vector<Networking::Client>, uint8_t> &clients_tup, int &port);
+
+  void add_to_port(std::string &address, int num);
 } // namespace Config

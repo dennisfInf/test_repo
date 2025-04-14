@@ -69,7 +69,11 @@ namespace MPC
 
     this->client.receive_outputs<gfpvar_<1, 6>>(1);
   }
-
+  void MPC::MPCClient::check_if_finished()
+  {
+    // just waits to get an output returned from the MPC.
+    client.receive_outputs<gfp>(1);
+  }
   // sends a G1 point to MPC_1
   void MPC::MPCClient::send_G1_points(std::vector<TEG::DecryptionShare> &points, int &batch_size)
   {
@@ -123,6 +127,17 @@ namespace MPC
     gfp value;
     value.unpack(os);
     return conv_gfp_to_bn(value);
+  }
+
+  std::vector<uint32_t> MPC::MPCClient::get_shares_xor(int &batch_size)
+  {
+    std::vector<gfp> values = client.receive_outputs<gfp>(batch_size);
+    std::vector<uint32_t> xor_shares;
+    for (int i = 0; i < batch_size; i++)
+    {
+      xor_shares.push_back(conv_gfp_to_x_type(values[i]));
+    };
+    return xor_shares;
   }
 
   std::vector<BilinearGroup::BN> MPC::MPCClient::get_shares(uint8_t &index, int &batch_size)

@@ -64,7 +64,7 @@ namespace emp
         // this is a global because of the inclusion of debug
 
         party = party_index;
-        string circuits_dir = "../lib/GigaDORAM/circuits";
+        string circuits_dir = "/app/lib/GigaDORAM/circuits";
 
         //! Named Parameters!
         string PRF_CIRCUIT_FILENAME = "LowMC_reuse_wires.txt";
@@ -76,6 +76,7 @@ namespace emp
         string compare_swap_circuit_filename = circuits_dir + "/compare_swap.txt";
         string dummy_check_dir = circuits_dir + "/dummy_check";
         string replace_if_dummy_dir = circuits_dir + "/replace_if_dummy";
+        std::cout << "parsing circuits" << std::endl;
 
         prf_circuit =
             new BristolFashion_array(prf_circ_filename); // make in main since we will use both for query and build
@@ -88,7 +89,7 @@ namespace emp
             replace_if_dummy_circuit_file[log_N] =
                 new BristolFashion_array(replace_if_dummy_dir + "/" + to_string(log_N) + ".txt");
         }
-
+        std::cout << "parsing ports" << std::endl;
         string prev_host, next_host;
         uint prev_port = 0, next_port = 0;
         parse_host_and_port(prev_host_and_port, prev_host, prev_port);

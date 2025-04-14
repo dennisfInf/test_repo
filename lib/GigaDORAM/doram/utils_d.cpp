@@ -71,5 +71,49 @@ namespace emp
             port = stoi(host_and_port);
         }
     }
+    /* void send_data(string data)
+    {
+        int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sockfd < 0)
+        {
+            std::cout << "fehler beim Erstellen des Sockets" << std::endl;
+            perror("Fehler beim Erstellen des Sockets");
+            return;
+        }
+        // Schritt 2: Zieladresse definieren
+        struct sockaddr_in destAddr;
+        std::memset(&destAddr, 0, sizeof(destAddr));
+        destAddr.sin_family = AF_INET;
+        destAddr.sin_port = htons(emp::webserver_port);
 
+        if (inet_pton(AF_INET, emp::webserver_address.c_str(), &destAddr.sin_addr) <= 0)
+        {
+            std::cout << "Ungültige Ziel-IP-Adresse" << std::endl;
+            perror("Ungültige Ziel-IP-Adresse");
+            close(sockfd);
+            return;
+        }
+
+        const char *message = data.c_str();
+
+        ssize_t bytesSent = sendto(
+            sockfd,                       // Socket-Deskriptor
+            message,                      // Nachricht, die gesendet werden soll
+            std::strlen(message),         // Länge der Nachricht
+            0,                            // Flags (0 = keine speziellen Flags)
+            (struct sockaddr *)&destAddr, // Zieladresse
+            sizeof(destAddr)              // Größe der Zieladressstruktur
+        );
+
+        if (bytesSent < 0)
+        {
+            std::cout << "Fehler beim Senden des Datagramms" << std::endl;
+            perror("Fehler beim Senden des Datagramms");
+            close(sockfd);
+            return;
+        }
+
+        // std::cout << "Nachricht gesendet: " << message << std::endl;
+        close(sockfd);
+    } */
 }

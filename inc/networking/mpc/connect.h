@@ -28,6 +28,9 @@ namespace MPC
     bigint get_prime_number();
     BilinearGroup::BN get_share(int index);
     std::vector<BilinearGroup::BN> get_shares(uint8_t &index, int &batch_size);
+    std::vector<uint32_t> get_shares_xor(int &batch_size);
+    void check_if_finished();
+
     void send_G1_points(std::vector<TEG::DecryptionShare> &points, int &batch_size);
 
   private:

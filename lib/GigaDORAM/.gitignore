@@ -1,0 +1,8 @@
+build/
+.vscode/
+multi_server_results/
+single_server_results/
+test/
+*.cerr
+*.sh
+*.py

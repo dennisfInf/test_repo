@@ -74,4 +74,26 @@ namespace MPC
     gfpvar_<1, 6> test_gfpvar = MPC::conv_bn_to_gfpvar(test);
     std::cout << test_gfpvar << std::endl;
   }
+
+  uint32_t conv_gfp_to_x_type(gfp &val)
+  {
+    std::ostringstream stream;
+
+    val.output(stream, true);
+    std::string str = stream.str();
+    if (!str.empty() && str[0] == '-')
+    {
+      bigint prime = gfp::pr();
+      bigint val2 = static_cast<long>(std::stoul(str));
+      bigint res = prime + val2;
+      return static_cast<uint32_t>(res.get_ui());
+    }
+    else
+    {
+      std::cout << "The first character is not a '-'." << std::endl;
+    }
+    std::cout << str << std::endl;
+    return static_cast<uint32_t>(std::stoul(str));
+  }
+
 } // namespace MPC

@@ -146,6 +146,7 @@ namespace emp
 
             // key sending
             block *eval_shared_keys = new block[circuit_input_length_bits];
+
             if (which_garbler == GARBLER_1)
             {
                 for (int i = 0; i < circuit_input_length_bits; i++)
@@ -161,12 +162,14 @@ namespace emp
                                           (select_mask[getBitArr(repl_input, i + circuit_input_length_bits)] & delta);
                 }
             }
+
             eval_full_io->send_block(eval_shared_keys, circuit_input_length_bits);
 
             // circuit computation
             block *circuit_output_zero_keys = new block[circuit_output_length_bits];
             time_before_compute = time_from(start);
             start = clock_start();
+
             circuit_file.compute_garbled(circuit_output_zero_keys, circuit_input_zero_keys, gen);
             gen->io->flush();
             time_compute = time_from(start);
@@ -190,7 +193,6 @@ namespace emp
             }
 
             time_after_compute = time_from(start);
-
             // clean up memory
             delete[] input_zero_keys;
             delete[] eval_shared_keys;
@@ -234,12 +236,12 @@ namespace emp
                 circuit_input_keys[i] =
                     input_keys[i] ^ input_keys[i + circuit_input_length_bits] ^ input_keys[i + 2 * circuit_input_length_bits];
             }
-
             block *circuit_output_keys = new block[circuit_output_length_bits];
             time_before_compute = time_from(start);
             start = clock_start();
             eva->io->actually_receive();
             circuit_file.compute_garbled(circuit_output_keys, circuit_input_keys, eva);
+
             time_compute = time_from(start);
             start = clock_start();
 
@@ -308,7 +310,7 @@ namespace emp
             void compute(rep_array_unsliced<block> &in, rep_array_unsliced<block> &out)
             {
                 vector<block> in_fixed = in.to_fixed();
-                vector<block> out_fixed(1);
+                vector<block> out_fixed(3 * out.length_Ts());
                 if (party == 1)
                 {
                     // todo: make this global

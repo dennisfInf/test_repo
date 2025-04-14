@@ -19,4 +19,12 @@ docker build -t mpspdz -f "$script_dir/../Dockerfile-MPSPDZ" \
     --build-arg machine=shamir-party.x \
     --build-arg gfp_mod_sz=6 $script_dir/..
 
-docker build -t poba $script_dir/..
+if [[ "$1" == "--gigadoram" ]]; then
+  docker build -t poba --build-arg ENABLE_GDORAM=ON $script_dir/..
+  echo "Gigadoram enabled.."
+else
+  docker build -t poba $script_dir/..
+fi
+
+
+

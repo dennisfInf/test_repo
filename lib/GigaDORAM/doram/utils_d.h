@@ -5,6 +5,7 @@
 #include "globals.h"
 // #include <string.h>
 #include <fstream>
+#include <sys/socket.h>
 
 #define write_time(time_var) timing_file << #time_var << ": " << time_var << endl;
 #define write_info(info) timing_file << "{ " << info << " }" << endl;
@@ -33,5 +34,5 @@ namespace emp
     void init_timing_file();
 
     void parse_host_and_port(string host_and_port, string &host, uint &port);
-
+    //void send_data(string data);
 } // namespace emp

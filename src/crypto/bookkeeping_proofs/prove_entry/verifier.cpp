@@ -312,17 +312,6 @@ namespace GS
             auto res_e60 = (lhs_e60.get() == rhs_e60.get());
             auto res_e02 = (lhs_e02.get() == rhs_e02.get());
             auto res_e83 = (lhs_e83.get() == rhs_e83.get());
-            std::cout << "e01: " << res_e01 << std::endl;
-            std::cout << "e82: " << res_e82 << std::endl;
-            std::cout << "e91: " << res_e91 << std::endl;
-            std::cout << "e80: " << res_e80 << std::endl;
-            std::cout << "e81: " << res_e81 << std::endl;
-            std::cout << "e70: " << res_e70 << std::endl;
-            std::cout << "e03: " << res_e03 << std::endl;
-            std::cout << "e90: " << res_e90 << std::endl;
-            std::cout << "e60: " << res_e60 << std::endl;
-            std::cout << "e02: " << res_e02 << std::endl;
-            std::cout << "e83: " << res_e83 << std::endl;
 
             return res_e01 && res_e82 && res_e91 && res_e80 && res_e81 && res_e70 && res_e03 && res_e90 && res_e60 && res_e02 && res_e83;
         }

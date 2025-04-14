@@ -31,7 +31,6 @@ namespace emp
                (uint)(1 << log_address_space_size) -
                    1); // sanity check on decide params. -1 becasue we don't include 0 or 2^N
         dbg("initialized DORAM params");
-
         //*init stupid
         stupid_level = new StupidLevel(1 << log_sls);
 
@@ -86,6 +85,11 @@ namespace emp
         amp_factor = 1 << log_amp_factor;
 
         log_sls = log_address_space_size - (num_levels - 1) * log_amp_factor;
+        std::cout << " log_address_space_size  " << log_address_space_size << std::endl;
+
+        std::cout << " num_levels" << num_levels << std::endl;
+
+        std::cout << " log_amp_factor " << log_amp_factor << std::endl;
         //! for small input sizes only concern (can't really run large inputs now)
         stash_size = use_proven_cht_bounds ? STASH_SIZE_USE_PROVEN_CHT_BOUNDS : STASH_SIZE_USE_EMPIRICAL_CHT_BOUNDS;
         assert(stash_size < (1U << log_sls) && "stash can't be smaller than stupid level");
@@ -132,6 +136,7 @@ namespace emp
 
     void DORAM::new_ohtable_of_level(uint level_num, rep_array_unsliced<x_type> xs, rep_array_unsliced<y_type> ys)
     {
+
         auto _start = clock_start();
 
         assert(level_num < num_levels);
@@ -157,13 +162,12 @@ namespace emp
         params.builder = 1;
         params.cht_log_single_col_len = get_log_col_len(level_num);
         rep_array_unsliced<block> key = generate_prf_key(level_num);
-
         OHTable_array *new_ohtable = new OHTable_array(params, xs, ys, key);
 
         time_total_builds[level_num] += time_from(_start);
 
         ohtables[level_num] = new_ohtable;
-    }
+        }
 
     void DORAM::delete_ohtable(uint lvl)
     {
@@ -338,6 +342,7 @@ namespace emp
                 use_dummy.debug_print("use_dummy");
                 alibi_mask.debug_print("alibi_mask");
                 */
+
                 rep_array_unsliced<y_type> y_returned(1);
                 rep_array_unsliced<int> found_returned(1);
                 ohtables[i]->query(prf_output.window(i, 1), use_dummy, y_returned, found_returned);

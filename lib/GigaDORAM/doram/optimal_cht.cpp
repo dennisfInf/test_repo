@@ -136,6 +136,7 @@ namespace emp
             rep_array_unsliced<block> circuit_input(4);
             rep_array_unsliced<block> circuit_output(1);
             block lookup_values[4];
+
             memset(lookup_values, 0, 4 * sizeof(block));
             if (party != builder)
             {
@@ -158,9 +159,11 @@ namespace emp
              */
             start = clock_start();
             lookup_circuit->compute(circuit_input, circuit_output);
+
             time_in_circuit = time_from(start);
             start = clock_start();
             block ret;
+
             circuit_output.reveal_to(prev_party(builder), &ret);
             circuit_output.reveal_to(next_party(builder), &ret);
             found.copy_bytes_from(circuit_output, 1, 4);

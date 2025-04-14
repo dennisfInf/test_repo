@@ -53,6 +53,8 @@ namespace emp
 
     public:
         DORAM(uint log_address_space_size, rep_array_unsliced<y_type> *ys_no_dummy_room, uint num_levels, uint log_amp_factor);
+        uint get_num_alive_levels();
+        uint total_num_els_and_dummies(uint level_num, uint state_override = UINT_MAX);
 
     private:
         void decide_params();
@@ -60,7 +62,6 @@ namespace emp
         void init_logger();
 
         void logger_write(string msg);
-        uint get_num_alive_levels();
 
         //*xs and ys must have len data_len+get_num_dummies(data_len)
         // base b should be incremmented on the outside
@@ -76,8 +77,6 @@ namespace emp
         uint get_num_dummies(uint level_num); // B^i * stupid_level_size (not including stash size )
 
         uint num_elements_at(uint level_num, uint state_override = UINT_MAX); //*this depends on the state vector
-
-        uint total_num_els_and_dummies(uint level_num, uint state_override = UINT_MAX);
 
     public:
         uint get_num_levels()

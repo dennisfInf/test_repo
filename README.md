@@ -1,6 +1,4 @@
 ## Important Notes
-We have 3 seperate projects (one for GigaDORAM, one for semi-honest and one for malicious), which made developing easier. This project now is the first step to merge all three projects, but is a prerelease version that is not fully tested. Currently, only semi-honest and malicious are merged and GigaDORAM will probabily be included too next week. Some more bug-testing needs to be done here. This code is very complex and required much work, so it will not be bug-free (hope that this is understandable).
-
 This code tries to use all threads of the underlying system. In doing so (since we are no pros)
 it sometimes does no progress, since some threads are occupied. Restarting the container helps then.
 This project version was (currently) only tested with n=3 t=1 and only locally (but should work with arbitrary parameters).
@@ -72,5 +70,14 @@ After that, you are able to run the project with:
  This code works fine and you can choose every parameter to your liking.
 
 
+## semi-honest gigadoram
+Almost the same as above. Here are the differences in the commands:
+Use the --gigadoram flag while building
 
+./scripts/build_docker_honest.zsh --gigadoram
 
+Also some additional arguments need to be provied to run it:
+
+ ./scripts/local_start_giga.zsh {batch_size} {bits} {num_levels}  {amp_factor}
+
+ Num levels and amp factor are parameteres specific to gigadoram. See: https://github.com/jacob14916/GigaDORAM-USENIX23-Artifact 

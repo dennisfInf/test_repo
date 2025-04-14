@@ -97,24 +97,59 @@ namespace Config
     uint8_t k = 1;
     uint8_t l = k + 1;
     int oram_addresses = 0;
+    int num_levels = 0;
+    int amp_factor = 0;
     bool malicious = stringToBool(argv[8]);
-    if (argc == 10)
+    if (argc >= 10)
     {
       oram_addresses = atoi(argv[9]);
+      num_levels = atoi(argv[10]);
+      amp_factor = atoi(argv[11]);
     }
-    return Config::Values{n_parties,
-                          stringToBool(argv[2]),
-                          t,
-                          atoi(argv[4]),
-                          port_base,
-                          argv[7],
-                          hostnames_mpc1,
-                          hostnames_mpc2,
-                          argv[6],
-                          l,
-                          k,
-                          malicious,
-                          oram_addresses};
+    return Config::Values{
+        n_parties,
+        stringToBool(argv[2]),
+        t,
+        atoi(argv[4]),
+        port_base,
+        argv[7],
+        hostnames_mpc1,
+        hostnames_mpc2,
+        argv[6],
+        l,
+        k,
+        malicious,
+        oram_addresses,
+        num_levels,
+        amp_factor};
+
+  } // namespace Config
+
+  Parties get_addresses(std::tuple<std::vector<Networking::Client>, uint8_t> &clients_tup, int &port)
+  {
+    uint8_t my_index = std::get<1>(clients_tup);
+    std::vector<Networking::Client> clients = std::get<0>(clients_tup);
+    if (my_index == 1)
+    {
+
+      // hier muss der bootstrapper seine eigenen ports zurückliefern
+      return {":" + std::to_string(port + 3), ":" + std::to_string(port)};
+    }
+    else if (my_index == 2)
+    {
+      return {clients[0].get_address(), ":" + std::to_string(port)};
+    }
+    else
+    {
+      std::string next = clients[0].get_address();
+      add_to_port(next, 3);
+      return {clients[1].get_address(), next};
+    }
+  };
+
+  void add_to_port(std::string &address, int num)
+  {
+    address.back() = address.back() + num;
   }
 
-} // namespace Config
+}

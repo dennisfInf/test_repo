@@ -52,6 +52,7 @@ int start_protocol(T *ho, Config::Values &config, std::tuple<std::vector<Network
                    int &batch_size)
 {
 
+    std::cout << "starting protocol" << std::endl;
     BilinearGroup::BN period = BN(0);
     BilinearGroup::BN message = BN(1337);
     // Builds a precomputation table for the crs of the NIZK

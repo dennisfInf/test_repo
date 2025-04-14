@@ -9,6 +9,11 @@
 #include "home_operator/structs.h"
 #include "networking/client.h"
 #include "networking/mpc/connect.h"
+#ifdef ENABLE_GDORAM
+#include "rep_array_unsliced.h"
+#include "doram_array.h"
+#include "oram.h"
+#endif
 #include "networking/thread_channel/safe_queue.h"
 #include "user/structs.h"
 #include <vector>
@@ -33,10 +38,9 @@ namespace bookkeeping
     HomeOperator(bool bootstrapper, std::vector<Networking::Client> &participants, const uint8_t &n, const uint8_t &t,
                  const uint8_t &my_index,
                  std::map<std::string, grpc::Service *> &services, std::vector<std::string> &hostnames, int mpc_port_base,
-                 GS::CRS crs_nizk, const uint8_t riss_l, const uint8_t riss_k, BilinearGroup::BN riss_mod_q, MPC::MPCClient &mpc_client_oram)
-        : el_gamal(participants, n, my_index, "context"), mpc_client(my_index, hostnames, n, bootstrapper, mpc_port_base), t(t), current_addr(1),
-          crs_nizk(crs_nizk), riss(my_index, n - 1, n, riss_l, riss_k, participants, riss_mod_q, services),
-          ho_index(my_index), mpc_client2(&mpc_client_oram)
+                 GS::CRS crs_nizk)
+        : el_gamal(participants, n, my_index, "context"), mpc_client(my_index, hostnames, n, bootstrapper, mpc_port_base), t(t), ho_index(my_index), current_addr(1),
+          crs_nizk(crs_nizk)
     {
       mpc_client.init_field();
       grpc::DKGServiceImpl *dkgService = Networking::cast_service<grpc::DKGServiceImpl>(services, "dkg");
@@ -61,11 +65,11 @@ namespace bookkeeping
   protected:
     SafeQueue<PendingEntry> l_pending;
     TEG::Protocol el_gamal;
-    void input_to_mpcs(std::chrono::_V2::system_clock::time_point &start_mpc1, bool bootstrap, double &mpc_time1, double &mpc_time2, std::future<void> &oram_ready_fut, SafeQueue<bool> &mpc_ready_queue, int &batch_size);
     MPC::MPCClient mpc_client;
     uint8_t t;
     grpc::TEGServiceImpl *tegService;
     bool verify_create_entry_proof(proof_create_entry_user &p_ce, std::vector<uint8_t> &h, tsps::Protocol *tsps);
+    uint8_t ho_index;
 
   private:
     BilinearGroup::FP current_addr;
@@ -81,11 +85,67 @@ namespace bookkeeping
     };
     std::mutex current_addr_mtx;
     GS::CRS crs_nizk;
-    RISS::Protocol riss;
-    uint8_t ho_index;
-    MPC::MPCClient *mpc_client2;
-    BilinearGroup::BN mod_q;
   };
+#ifdef ENABLE_GDORAM
+  class HomeOperatorHonest : public HomeOperator
+  {
+  public:
+    HomeOperatorHonest(bool bootstrapper, std::vector<Networking::Client> &participants, const uint8_t &n, const uint8_t &t,
+                       const uint8_t &my_index,
+                       std::map<std::string, grpc::Service *> &services, std::vector<std::string> &hostnames, int mpc_port_base,
+                       GS::CRS crs_nizk,
+                       const uint &LOG_ADDRESS_SPACE, const uint &NUM_LEVELS, const uint &LOG_AMP_FACTOR, emp::rep_array_unsliced<emp::y_type> *ys, tsps::Protocol *tsps) : HomeOperator(bootstrapper, participants, n, t, my_index, services, hostnames, mpc_port_base, crs_nizk), tsps(tsps), doram(LOG_ADDRESS_SPACE, ys, NUM_LEVELS, LOG_AMP_FACTOR)
+    {
+      std::cout << "starting protocol" << std::endl;
+
+      tsps->init(bootstrapper);
+      if (emp::party != 3)
+      {
+        std::string host;
+        uint port;
+        emp::parse_host_and_port(participants[0].get_address(), host, port);
+        bootstrap_addr = host;
+      }
+      std::cout << "setting up oram.." << std::endl;
+      DORAM::setup_oram(this->doram);
+    }
+
+    PublicKeys get_public_keys() override
+    {
+      return this->HomeOperator::get_public_keys(tsps);
+    }
+    tsps::PublicParameters get_public_parameters() override
+    {
+      return this->HomeOperator::get_public_parameters(tsps);
+    }
+    bool prove_entry(proof_prove_entry &ppe) override
+    {
+      return this->HomeOperator::prove_entry(ppe, tsps);
+    }
+
+    BLS::Signature create_entry(proof_create_entry_user &p_ce, BilinearGroup::BN &msg, BilinearGroup::BN &period) override
+    {
+      return this->HomeOperator::create_entry(p_ce, msg, period, tsps);
+    }
+    ThresholdSignature register_user(bookkeeping::proof_sk_u &proof_sk_u) override
+    {
+      return this->HomeOperator::register_user(proof_sk_u, tsps);
+    }
+    BenchmarkInsertEntry calc_decryption_shares(BilinearGroup::BN &period, BilinearGroup::BN &msg, int &runs, int &batch_size);
+    BenchmarkInsertEntry insert_entry(int &runs, int &batch_size);
+
+  protected:
+    std::string bootstrap_addr;
+
+    tsps::Protocol *tsps;
+
+    void input_to_mpcs(std::chrono::_V2::system_clock::time_point &start_mpc1, bool bootstrap, double &mpc_time1, double &mpc_time2, std::future<void> &oram_ready_fut, SafeQueue<bool> &mpc_ready_queue, int &batch_size, std::vector<emp::y_type> &y_queries);
+
+  private:
+    emp::DORAM doram;
+    emp::HighSpeedNetIO *io;
+  };
+#else
 
   class HomeOperatorBase : public HomeOperator
   {
@@ -95,7 +155,7 @@ namespace bookkeeping
                      const uint8_t &my_index,
                      std::map<std::string, grpc::Service *> &services, std::vector<std::string> &hostnames, int mpc_port_base,
                      GS::CRS crs_nizk, const uint8_t riss_l, const uint8_t riss_k, BilinearGroup::BN riss_mod_q, MPC::MPCClient &mpc_client_oram, tsps::Protocol *tsps)
-        : HomeOperator(bootstrapper, participants, n, t, my_index, services, hostnames, mpc_port_base, crs_nizk, riss_l, riss_k, riss_mod_q, mpc_client_oram), tsps(tsps)
+        : HomeOperator(bootstrapper, participants, n, t, my_index, services, hostnames, mpc_port_base, crs_nizk), tsps(tsps), mpc_client2(&mpc_client_oram), mod_q(riss_mod_q), riss(my_index, n - 1, n, riss_l, riss_k, participants, riss_mod_q, services)
     {
       tsps->init(bootstrapper);
     }
@@ -126,6 +186,12 @@ namespace bookkeeping
 
   protected:
     tsps::Protocol *tsps;
+    void input_to_mpcs(std::chrono::_V2::system_clock::time_point &start_mpc1, bool bootstrap, double &mpc_time1, double &mpc_time2, std::future<void> &oram_ready_fut, SafeQueue<bool> &mpc_ready_queue, int &batch_size);
+
+  private:
+    MPC::MPCClient *mpc_client2;
+    BilinearGroup::BN mod_q;
+    RISS::Protocol riss;
   };
   class HomeOperatorHonest : public HomeOperatorBase
   {
@@ -156,4 +222,5 @@ namespace bookkeeping
     BenchmarkInsertEntry insert_entry(int &runs, int &batch_size) override;
     BenchmarkInsertEntry calc_decryption_shares(BilinearGroup::BN &period, BilinearGroup::BN &msg, int &runs, int &batch_size) override;
   };
+#endif
 } // namespace bookkeeping

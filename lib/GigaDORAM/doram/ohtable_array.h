@@ -9,6 +9,8 @@
 #include "utils_d.h"
 #include "globals.h"
 
+#include <sstream>
+
 namespace emp
 {
 
@@ -288,6 +290,7 @@ namespace emp
             auto start = clock_start();
             rep_array_unsliced<block> q_or_dummy(1);
             rep_array_unsliced<block> dummy(1);
+
             dummy.fill_random();
             auto start_ite = clock_start();
             rep_exec->if_then_else(use_dummy, dummy, q, q_or_dummy);
@@ -306,8 +309,10 @@ namespace emp
             dummy_index.copy_one(0, dummy_indices, query_count);
             time_before_cht = time_from(start);
             start = clock_start();
+
             uint index_builder_order = optimalcht::lookup_from_2shares(cht_2shares, q_clear, params.cht_log_single_col_len,
                                                                        dummy_index, found, params.builder);
+
             time_in_cht = time_from(start);
 
             start = clock_start();
@@ -330,7 +335,13 @@ namespace emp
 
             assert(!touched[index_receiver_order]);
             touched[index_receiver_order] = true;
-
+            /* if (party == 1)
+            {
+                std::cout << "num el: " << params.num_elements << "num dummies: " << params.num_dummies << std::endl;
+                std::ostringstream oss;
+                oss << "1" << "," << index_receiver_order << "," << (params.num_elements + params.num_dummies);
+                send_data(oss.str());
+            } */
             y.copy_one(0, ys_receiver_order, index_receiver_order);
             query_count++;
             time_after_cht = time_from(start);

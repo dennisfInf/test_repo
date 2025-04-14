@@ -33,8 +33,10 @@ namespace emp
   // 2: Party 2
   // 3: Party 3
   extern int party;
-
+  extern std::string webserver_address;
+  extern uint16_t webserver_port;
   extern uint NUM_THREADS;
+  extern uint elems_length;
 
   // Each of the thread_unsafe:: resources is an array of length num_threads
   // which has to be initialized in main. The 0th element is the default

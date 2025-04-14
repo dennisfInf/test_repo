@@ -1,4 +1,4 @@
-target_sources(ippa
+target_sources(poba
   PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/matrix_dist.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/key_gen.cpp"

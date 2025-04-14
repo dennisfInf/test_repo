@@ -185,7 +185,6 @@ namespace emp
             is_server = (address == nullptr);
             if (is_server)
             {
-                std::cout << "is server" << std::endl;
                 recv_sock = server_listen(send_port);
                 usleep(2000);
                 send_sock = server_listen(recv_port);
