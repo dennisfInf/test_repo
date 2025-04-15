@@ -9,6 +9,7 @@ namespace DORAM
         for (int i = 0; i < 5000; i++)
         {
             int is_write = 1;
+
             emp::rep_array_unsliced<int> is_write_rep(1);
             is_write_rep.input_public(&is_write);
             emp::rep_array_unsliced<emp::x_type> user_pointer(1);
@@ -26,7 +27,8 @@ namespace DORAM
         emp::rep_array_unsliced<int> is_write_rep(1);
         is_write_rep.input_public(&is_write);
         emp::rep_array_unsliced<emp::x_type> x_query(1);
-        x_query.input_public(&pointer_index_share);
+        x_query.input_xor(1, &pointer_index_share);
+        x_query.input_xor(2, &pointer_index_share);
         emp::rep_array_unsliced<emp::y_type> y_qry_rep(1);
         return {x_query, doram.read_and_write(x_query, y_qry_rep, is_write_rep)};
     };

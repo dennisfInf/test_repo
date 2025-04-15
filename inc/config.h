@@ -27,6 +27,7 @@ namespace Config
     uint8_t l;
     uint8_t k;
     bool malicious;
+    int batch_size;
     int oram_addresses;
     int num_levels;
     int amp_factor;

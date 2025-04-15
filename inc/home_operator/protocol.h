@@ -74,7 +74,7 @@ namespace bookkeeping
   private:
     BilinearGroup::FP current_addr;
     BilinearGroup::FP retrieve_current_addr() { return current_addr; };
-    void increment_addr() { current_addr.increment(); };
+    void increment_addr() { current_addr.next_pointer(); };
     std::vector<LKey> l_keys;
     std::mutex l_lkeys_mtx;
     BLS::Signatures bls_sig;

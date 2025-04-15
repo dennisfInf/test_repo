@@ -91,6 +91,23 @@ def sum_points(input):
     # Return the first point of the result
     return input[0]
 
+def output_xor_shares(x_coord,client_ids):
+    bits = 32;
+    #removes the last 3 digits
+    secret = x_coord.int_div(1000,32)
+    print_ln("test %s", secret.reveal())
+    # decomposes the secret. Bit decomposition is very inefficient here, but we could not find any other solution.
+    secret_bits = secret.bit_decompose(bits)
+    # sample random bits and xor them with the secret. Store the result in result
+    random_bits = [sint.get_random_bit() for _ in range(0,bits)]
+    result_bits = [(sintbit(secret_bits[i])^sintbit(random_bits[i])) for i in range(0,bits)]
+    result = sint.bit_compose(result_bits)
+    random = sint.bit_compose(random_bits)
+    return (result,random)
+
+
+
+
 def main():
 
     """Listen while all clients connect to the mpc.
@@ -186,17 +203,28 @@ def main():
 
             results =  add_points_bernstein(bootstrap_shares[0],bootstrap_shares[1],z_vec.assign(list([regint(1)]*batch_size)), sum_shares[0], -sum_shares[1],sum_shares[2])
             print_ln("\n norming points...")
-            for coords in results:
-                print_ln("\n coords %s",coords.reveal())
+        
             x_arr = norm_point(results[0],results[2])
             print_ln("\n otuput..")
-            for coords in x_arr:
-                print_ln("\n coords %s",coords.reveal())
+ 
 
+            x_arr_spdz = Array(batch_size,sint)
+            x_arr_spdz.assign(x_arr)
+            party0_xor_shares =  Array(batch_size, sint)
+            party1_xor_shares =  Array(batch_size, sint)
+            start_timer(99)
+            @for_range_opt_multithread(4, batch_size,5)
+            def _(i):
+                (result,random) = output_xor_shares(x_arr_spdz[i],client_ids);
+                party0_xor_shares[i] = random
+                party1_xor_shares[i] = result
 
-            sint.write_shares_to_socket(get_player_id().get_regint(), x_arr)
-            stop_timer(20)
-            
+             # reveal random to party 1 (index 0) and result to party 2.
+            stop_timer(99)
+            sint.reveal_to_clients([regint(0)],party0_xor_shares)
+            sint.reveal_to_clients([regint(1)],party1_xor_shares)
+            sint.reveal_to_clients([regint(2)],sint(0))
+            stop_timer(20)            
         
         for_range(50)(type_run)
         print_ln('reached type input.')

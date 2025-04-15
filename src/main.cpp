@@ -43,8 +43,8 @@ int main(int argc, char **argv)
 {
   // Creates a config object from the command line arguments
   Config::Values config = Config::create_config(argc, argv);
-  int runs = 1;
-  int batch_size = 100;
+  int runs = 5;
+  int batch_size = 20;
   // Creates a map of required grpc services
   std::map<std::string, grpc::Service *> services =
       Networking::create_service_map(config.n_parties, config.l, config.k);

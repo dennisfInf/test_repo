@@ -131,6 +131,7 @@ namespace MPC
 
   std::vector<uint32_t> MPC::MPCClient::get_shares_xor(int &batch_size)
   {
+    std::cout << "receiving shares" << std::endl;
     std::vector<gfp> values = client.receive_outputs<gfp>(batch_size);
     std::vector<uint32_t> xor_shares;
     for (int i = 0; i < batch_size; i++)

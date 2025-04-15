@@ -56,14 +56,17 @@ int start_protocol(T *ho, Config::Values &config, std::tuple<std::vector<Network
     BilinearGroup::BN period = BN(0);
     BilinearGroup::BN message = BN(1337);
     // Builds a precomputation table for the crs of the NIZK
-    Benchmarks benchmarks;
+
+    Benchmarks benchmarks{};
+    int total_runs = runs * batch_size;
+
     // Only the bootstrapping node acts as a home operator for the user. The other nodes only participate in the DKG's, threshold-algorithms and MPC's.
     if (config.bootstrap)
     {
         tsps::PublicParameters pp = ho->get_public_parameters();
         bookkeeping::PublicKeys public_keys = ho->get_public_keys();
         // This runs the registration process and creaty entry 50 times in sequence to get an average time
-        for (int i = 0; i < runs * batch_size; i++)
+        for (int i = 0; i < total_runs; i++)
         {
             std::cout << "run: " << i << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
@@ -135,7 +138,7 @@ int start_protocol(T *ho, Config::Values &config, std::tuple<std::vector<Network
 
         oss << "/app/benchmarks/party_" << static_cast<int>(std::get<1>(clients)) << "_n_" << static_cast<int>(config.n_parties) << "_t_" << static_cast<int>(config.t) << "_addr_" << static_cast<int>(config.oram_addresses);
 
-        writeBenchmarksToFile(benchmarks, oss.str(), runs);
+        writeBenchmarksToFile(benchmarks, oss.str(), total_runs);
         benchmarks.benchmarks_ie = ho->insert_entry(runs, batch_size);
     }
     else
@@ -146,7 +149,7 @@ int start_protocol(T *ho, Config::Values &config, std::tuple<std::vector<Network
     }
     std::ostringstream oss;
     oss << "/app/benchmarks/party_" << static_cast<int>(std::get<1>(clients)) << "_n_" << static_cast<int>(config.n_parties) << "_t_" << static_cast<int>(config.t) << "_addr_" << static_cast<int>(config.oram_addresses);
-    writeBenchmarksToFile(benchmarks, oss.str(), runs);
+    writeBenchmarksToFile(benchmarks, oss.str(), total_runs);
     std::cout << config.bootstrap << "party" << std::endl;
     sleep(1000000000);
     return 0;

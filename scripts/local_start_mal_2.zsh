@@ -29,11 +29,11 @@ done
 sleep 4
 
 app_port=50050
-docker run --rm --network host --mount type=bind,source=$script_dir/../mp-spdz-files/HostFiles/local/hostnames_mpc1.txt,target=/app/hostnames_mpc1.txt  --mount type=bind,source=$script_dir/../mp-spdz-files/HostFiles/local/hostnames_mpc2.txt,target=/app/hostnames_mpc2.txt -v $script_dir/../benchmarks:/app/benchmarks poba $n 1 $t $app_port 14000 127.0.0.1 127.0.0.1:50050 1 &
+docker run --rm --network host --mount type=bind,source=$script_dir/../mp-spdz-files/HostFiles/local/hostnames_mpc1.txt,target=/app/hostnames_mpc1.txt  --mount type=bind,source=$script_dir/../mp-spdz-files/HostFiles/local/hostnames_mpc2.txt,target=/app/hostnames_mpc2.txt -v $script_dir/../benchmarks:/app/benchmarks poba $n 1 $t $app_port 14000 127.0.0.1 127.0.0.1:50050 1 $7&
 
 for id in {1..$(($n- 1))};do
     app_port=$((50050+ $id))
-    docker run --rm  --network host --mount type=bind,source=$script_dir/../mp-spdz-files/HostFiles/local/hostnames_mpc1.txt,target=/app/hostnames_mpc1.txt  --mount type=bind,source=$script_dir/../mp-spdz-files/HostFiles/local/hostnames_mpc2.txt,target=/app/hostnames_mpc2.txt -v $script_dir/../benchmarks:/app/benchmarks poba $n 0 $t $app_port 14000 127.0.0.1 127.0.0.1:50050 1 &
+    docker run --rm  --network host --mount type=bind,source=$script_dir/../mp-spdz-files/HostFiles/local/hostnames_mpc1.txt,target=/app/hostnames_mpc1.txt  --mount type=bind,source=$script_dir/../mp-spdz-files/HostFiles/local/hostnames_mpc2.txt,target=/app/hostnames_mpc2.txt -v $script_dir/../benchmarks:/app/benchmarks poba $n 0 $t $app_port 14000 127.0.0.1 127.0.0.1:50050 1 $7&
 done
 
 wait

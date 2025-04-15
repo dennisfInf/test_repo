@@ -88,11 +88,6 @@ namespace MPC
       bigint res = prime + val2;
       return static_cast<uint32_t>(res.get_ui());
     }
-    else
-    {
-      std::cout << "The first character is not a '-'." << std::endl;
-    }
-    std::cout << str << std::endl;
     return static_cast<uint32_t>(std::stoul(str));
   }
 

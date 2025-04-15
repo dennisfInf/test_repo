@@ -99,12 +99,17 @@ namespace Config
     int oram_addresses = 0;
     int num_levels = 0;
     int amp_factor = 0;
+    int batch_size = 20;
     bool malicious = stringToBool(argv[8]);
     if (argc >= 10)
     {
-      oram_addresses = atoi(argv[9]);
-      num_levels = atoi(argv[10]);
-      amp_factor = atoi(argv[11]);
+      batch_size = atoi(argv[9]);
+    };
+    if (argc >= 11)
+    {
+      oram_addresses = atoi(argv[10]);
+      num_levels = atoi(argv[11]);
+      amp_factor = atoi(argv[12]);
     }
     return Config::Values{
         n_parties,
@@ -119,6 +124,7 @@ namespace Config
         l,
         k,
         malicious,
+        batch_size,
         oram_addresses,
         num_levels,
         amp_factor};
